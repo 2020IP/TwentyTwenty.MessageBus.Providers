@@ -9,5 +9,10 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
         {
             app.ApplicationServices.GetRequiredService<MassTransitFaultBusAutoRegistrar>().RegisterHandlers();
         }
+
+        public static void StartMassTransit(this IApplicationBuilder app)
+        {
+            app.ApplicationServices.GetRequiredService<MassTransitMessageBus>().StartAsync().Wait();
+        }
     }
 }
