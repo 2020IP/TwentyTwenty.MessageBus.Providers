@@ -9,9 +9,14 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
 {
     public static class MassTransitServiceExtensions
     {
-        public static void AddMassTransitMessageBus(this IServiceCollection services)
+        public static void AddMassTransitMessageBus(this IServiceCollection services, MassTransitMessageBusOptions options)
         {
-            services.AddSingleton<MassTransitMessageBus>();
+            if (options == null)
+            {
+                throw new ArgumentException(nameof(options));
+            }
+
+            services.AddSingleton(s => new MassTransitMessageBus(options));
             services.AddSingleton<ICommandSender>(s => s.GetService<MassTransitMessageBus>());
             services.AddSingleton<IEventPublisher>(s => s.GetService<MassTransitMessageBus>());
             services.AddSingleton<IHandlerRegistrar>(s => s.GetService<MassTransitMessageBus>());
