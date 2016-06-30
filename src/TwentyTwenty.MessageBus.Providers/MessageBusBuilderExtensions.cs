@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace TwentyTwenty.MessageBus.Providers.MassTransit
+namespace TwentyTwenty.MessageBus.Providers
 {
     public static class MessageBusBuilderExtensions
     {
