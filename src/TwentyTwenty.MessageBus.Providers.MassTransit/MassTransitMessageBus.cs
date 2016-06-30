@@ -61,7 +61,7 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
             {
                 handler(h.Message);
 
-                return Task.CompletedTask;
+                return Task.FromResult(false);
             });
 
             AddEndpointConsumer(typeof(T).Name, consumer);
@@ -77,7 +77,7 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
                 fault.ErrorMessage = string.Join(", ", h.Message.Exceptions.Select(e => e.Message));
                 handler(fault);
 
-                return Task.CompletedTask;
+                return Task.FromResult(false);
             });
             
             AddEndpointConsumer(typeof(T).Name, consumer);
