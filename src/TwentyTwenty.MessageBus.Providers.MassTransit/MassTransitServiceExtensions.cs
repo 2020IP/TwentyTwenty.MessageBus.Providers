@@ -15,7 +15,10 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
             services.AddSingleton<IEventPublisher>(s => s.GetService<MassTransitMessageBus>());
             services.AddSingleton<IHandlerRegistrar>(s => s.GetService<MassTransitMessageBus>());
             services.AddSingleton<IFaultHandlerRegistrar>(s => s.GetService<MassTransitMessageBus>());
+        }
 
+        public static void AddMasstTransitFaultHandlers(this IServiceCollection services, Assembly faultHandlerAssembly)
+        {
             var faultHandlers = services.AddFaultHandlers(faultHandlerAssembly);
             services.AddSingleton(s => new MassTransitFaultBusAutoRegistrar(s, s.GetRequiredService<IFaultHandlerRegistrar>(), faultHandlers));
         }

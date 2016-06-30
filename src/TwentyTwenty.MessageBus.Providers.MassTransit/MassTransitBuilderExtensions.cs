@@ -5,9 +5,9 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
 {
     public static class MassTransitBuilderExtensions
     {
-        public static void UseMassTransitRegistry(this IApplicationBuilder app)
+        public static void UseMassTransitFaultAutoRegistrar(this IApplicationBuilder app)
         {
-            app.ApplicationServices.GetRequiredService<BusAutoRegistrar>().RegisterHandlers();
+            app.ApplicationServices.GetRequiredService<MassTransitFaultBusAutoRegistrar>().RegisterHandlers();
         }
     }
 }
