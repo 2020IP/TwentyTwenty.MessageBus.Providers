@@ -1,0 +1,13 @@
+﻿{
+  "version": "1.0.0-*",
+
+  "dependencies": {
+    "Microsoft.Extensions.DependencyInjection": "1.0.0",
+    "Microsoft.AspNetCore.Http.Abstractions": "1.0.0",
+    "TwentyTwenty.DomainDriven": "1.0.0"
+  },
+
+  "frameworks": {
+    "net461": { }
+  }
+}

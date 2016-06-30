@@ -1,0 +1,15 @@
+﻿{
+  "version": "1.0.0-*",
+
+  "dependencies": {
+    "Microsoft.Extensions.DependencyInjection": "1.0.0",
+    "TwentyTwenty.DomainDriven": "1.0.0",
+    "MassTransit": "3.2.4",
+    "MassTransit.RabbitMQ": "3.2.4",
+    "TwentyTwenty.MessageBus.Providers": "1.0.0-*"
+  },
+
+  "frameworks": {
+    "net461": { }
+  }
+}
