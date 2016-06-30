@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Linq;
 using System.Reflection;
 using TwentyTwenty.DomainDriven;
@@ -10,6 +11,16 @@ namespace TwentyTwenty.MessageBus.Providers
     {
         public static void AddMessageBusHandlers(this IServiceCollection services, Assembly commandHandlerAssembly, Assembly eventListenerAssembly)
         {
+            if (commandHandlerAssembly == null)
+            {
+                throw new ArgumentException("The command handler assembly cannot be null.");
+            }
+
+            if (eventListenerAssembly == null)
+            {
+                throw new ArgumentException("The event listener assembly cannot be null.");
+            }
+
             var commandHandlers = services.AddCommandHandlers(commandHandlerAssembly);
             var eventListeners = services.AddEventListeners(eventListenerAssembly);
 

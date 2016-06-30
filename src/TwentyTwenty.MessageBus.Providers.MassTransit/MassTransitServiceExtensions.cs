@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Linq;
 using System.Reflection;
 using TwentyTwenty.DomainDriven;
@@ -19,6 +20,11 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
 
         public static void AddMasstTransitFaultHandlers(this IServiceCollection services, Assembly faultHandlerAssembly)
         {
+            if (faultHandlerAssembly == null)
+            {
+                throw new ArgumentException("The fault handler assembly cannot be null.");
+            }
+
             var faultHandlers = services.AddFaultHandlers(faultHandlerAssembly);
             services.AddSingleton(s => new MassTransitFaultBusAutoRegistrar(s, s.GetRequiredService<IFaultHandlerRegistrar>(), faultHandlers));
         }
