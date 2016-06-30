@@ -1,14 +1,10 @@
-﻿using MassTransit.BusConfigurators;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using MassTransit.Builders;
 
 namespace TwentyTwenty.MessageBus.Providers.MassTransit
 {
     public class MassTransitMessageBusOptions
     {
-        public BusObserverSpecification BusObserver { get; set; }
+        public IBusFactorySpecification BusObserver { get; set; }
 
         public bool UseInMemoryBus { get; set; }
 

@@ -18,6 +18,11 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
 
         public MassTransitMessageBus(MassTransitMessageBusOptions options)
         {
+            if (options == null)
+            {
+                throw new ArgumentException(nameof(options));
+            }
+
             _options = options;
         }
         

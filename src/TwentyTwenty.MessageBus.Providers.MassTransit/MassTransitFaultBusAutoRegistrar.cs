@@ -23,7 +23,7 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
         public void RegisterHandlers()
         {
             // UGH, too much reflection.  Is there a better way?
-            var method = typeof(BusAutoRegistrar).GetMethod("RegisterFaultHandler");
+            var method = typeof(MassTransitFaultBusAutoRegistrar).GetMethod("RegisterFaultHandler");
 
             foreach (var handler in _faultHandlers)
             {

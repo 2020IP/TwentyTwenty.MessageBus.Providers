@@ -26,6 +26,7 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
             }
 
             var faultHandlers = services.AddFaultHandlers(faultHandlerAssembly);
+
             services.AddSingleton(s => new MassTransitFaultBusAutoRegistrar(s, s.GetRequiredService<IFaultHandlerRegistrar>(), faultHandlers));
         }
 
