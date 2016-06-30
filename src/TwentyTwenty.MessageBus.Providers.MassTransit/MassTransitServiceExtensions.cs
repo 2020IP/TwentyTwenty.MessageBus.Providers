@@ -8,7 +8,7 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
 {
     public static class MassTransitServiceExtensions
     {
-        public static void AddMassTransitMessageBus(this IServiceCollection services, Assembly faultHandlerAssembly)
+        public static void AddMassTransitMessageBus(this IServiceCollection services)
         {
             services.AddSingleton<MassTransitMessageBus>();
             services.AddSingleton<ICommandSender>(s => s.GetService<MassTransitMessageBus>());
