@@ -1,10 +1,23 @@
 ﻿{
-  "version": "1.0.0-*",
+  "version": "1.0.1-*",
+  "title": "20|20 MessageBus.Providers",
+  "description": "Message Bus and Provider Abstractions",
+  "authors": [ "2020IP" ],
+  "packOptions": {
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/2020IP/TwentyTwenty.MessageBus.Providers"
+    },
+    "iconUrl": "https://avatars3.githubusercontent.com/u/15891935?v=3&s=64",
+    "tags": [ "Message Bus MessageBus TwentyTwenty 2020" ],
+    "projectUrl": "https://github.com/2020IP/TwentyTwenty.MessageBus.Providers",
+    "licenseUrl": "https://github.com/2020IP/TwentyTwenty.MessageBus.Providers/master/LICENSE.txt"
+  },
 
   "dependencies": {
     "Microsoft.Extensions.DependencyInjection": "1.0.0",
     "Microsoft.AspNetCore.Http.Abstractions": "1.0.0",
-    "TwentyTwenty.DomainDriven": "1.0.0"
+    "TwentyTwenty.DomainDriven": "1.0.2"
   },
 
   "frameworks": {

@@ -1,15 +1,28 @@
 ﻿{
-  "version": "1.0.0-*",
+  "version": "1.0.1-*",
+  "title": "20|20 MessageBus.Providers.MassTransit",
+  "description": "MassTransit Message Bus Abstractions",
+  "authors": [ "2020IP" ],
+  "packOptions": {
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/2020IP/TwentyTwenty.MessageBus.Providers"
+    },
+    "iconUrl": "https://avatars3.githubusercontent.com/u/15891935?v=3&s=64",
+    "tags": [ "Mass Transit Message Bus MessageBus MassTransit TwentyTwenty 2020" ],
+    "projectUrl": "https://github.com/2020IP/TwentyTwenty.MessageBus.Providers",
+    "licenseUrl": "https://github.com/2020IP/TwentyTwenty.MessageBus.Providers/master/LICENSE.txt"
+  },
 
   "dependencies": {
     "Microsoft.Extensions.DependencyInjection": "1.0.0",
-    "TwentyTwenty.DomainDriven": "1.0.0",
+    "TwentyTwenty.DomainDriven": "1.0.2",
     "MassTransit": "3.2.4",
     "MassTransit.RabbitMQ": "3.2.4",
-    "TwentyTwenty.MessageBus.Providers": "1.0.0-*"
+    "TwentyTwenty.MessageBus.Providers": "1.0.1-*"
   },
 
   "frameworks": {
-    "net452": { }
+    "net452": {}
   }
 }
