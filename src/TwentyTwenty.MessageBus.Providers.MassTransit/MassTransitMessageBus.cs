@@ -26,7 +26,7 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
             _options = options;
         }
         
-        async Task ICommandSender.Send<T>(T command)
+        public virtual async Task Send<T>(T command) where T : class, ICommand
         {
             if (_busControl == null)
             {
@@ -58,30 +58,6 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
             }
             
             return _busControl.Publish(@event, @event.GetType());
-        }
-
-        async Task IEventPublisher.Send<T>(T command)
-        {
-            if (_busControl == null)
-            {
-                throw new InvalidOperationException("MassTransit bus must be started before sending commands.");
-            }
-
-            ISendEndpoint endpoint;
-            if (_options.UseInMemoryBus)
-            {
-                endpoint = await _busControl.GetSendEndpoint(
-                    new Uri("loopback://localhost/" + command.GetType().Name))
-                    .ConfigureAwait(false);
-            }
-            else
-            {
-                endpoint = await _busControl.GetSendEndpoint(
-                    new Uri($"{_options.RabbitMQUri}/{command.GetType().Name}"))
-                    .ConfigureAwait(false);
-            }
-
-            await endpoint.Send(command).ConfigureAwait(false);
         }
 
         public virtual void RegisterHandler<T>(Action<T> handler) where T : class, IMessage
