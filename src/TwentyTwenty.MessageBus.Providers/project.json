@@ -1,5 +1,5 @@
 ﻿{
-  "version": "1.0.1-*",
+  "version": "1.0.2-*",
   "title": "20|20 MessageBus.Providers",
   "description": "Message Bus and Provider Abstractions",
   "authors": [ "2020IP" ],
@@ -17,7 +17,7 @@
   "dependencies": {
     "Microsoft.Extensions.DependencyInjection": "1.0.0",
     "Microsoft.AspNetCore.Http.Abstractions": "1.0.0",
-    "TwentyTwenty.DomainDriven": "1.0.1"
+    "TwentyTwenty.DomainDriven": "1.0.3"
   },
 
   "frameworks": {
