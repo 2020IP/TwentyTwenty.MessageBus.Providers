@@ -39,7 +39,7 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
         {
             return asm.GetTypes()
                 .Select(t => t.GetInterfaces()
-                    .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IFaultHandler<>))
+                    .Where(i => i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IFaultHandler<>))
                     .Select(i => new HandlerRegistration
                     {
                         ImplementationType = t,

@@ -17,12 +17,13 @@
   "dependencies": {
     "Microsoft.Extensions.DependencyInjection": "1.0.0",
     "TwentyTwenty.DomainDriven": "1.0.3",
-    "MassTransit": "3.2.4",
-    "MassTransit.RabbitMQ": "3.2.4",
-    "TwentyTwenty.MessageBus.Providers": "1.0.2-*"
+    "MassTransit": "1.0.0-core-1",
+    "MassTransit.RabbitMqTransport": "1.0.0-core-1",
+    "TwentyTwenty.MessageBus.Providers": { "target": "project" }
   },
 
   "frameworks": {
-    "net452": {}
+    "net452": { },
+    "netstandard1.5": { }
   }
 }
