@@ -31,7 +31,7 @@ namespace TwentyTwenty.MessageBus.Providers
         {
             return asm.GetTypes()
                 .Select(t => t.GetInterfaces()
-                    .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ICommandHandler<>))
+                    .Where(i => i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(ICommandHandler<>))
                     .Select(i => new HandlerRegistration
                     {
                         ImplementationType = t,
@@ -52,7 +52,7 @@ namespace TwentyTwenty.MessageBus.Providers
         {
             return asm.GetTypes()
                 .Select(t => t.GetInterfaces()
-                    .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEventListener<>))
+                    .Where(i => i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IEventListener<>))
                     .Select(i => new HandlerRegistration
                     {
                         ImplementationType = t,
