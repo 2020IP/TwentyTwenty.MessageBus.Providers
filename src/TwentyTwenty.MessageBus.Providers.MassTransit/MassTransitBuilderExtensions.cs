@@ -14,5 +14,10 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
         {
             app.ApplicationServices.GetRequiredService<MassTransitMessageBus>().StartAsync().Wait();
         }
+
+        public static void StopMassTransit(this IApplicationBuilder app)
+        {
+            app.ApplicationServices.GetRequiredService<MassTransitMessageBus>().StopAsync().Wait();
+        }
     }
 }

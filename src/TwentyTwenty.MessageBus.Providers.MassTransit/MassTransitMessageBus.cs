@@ -6,6 +6,7 @@ using TwentyTwenty.DomainDriven.CQRS;
 using System.Collections.Generic;
 using MassTransit.ConsumeConfigurators;
 using System.Linq;
+using System.Threading;
 
 namespace TwentyTwenty.MessageBus.Providers.MassTransit
 {
@@ -162,6 +163,11 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
             }
 
             return _busControl.StartAsync();
+        }
+
+        public virtual Task StopAsync(CancellationToken token = default(CancellationToken))
+        {
+            return _busControl.StopAsync(token);
         }
     }
 }
