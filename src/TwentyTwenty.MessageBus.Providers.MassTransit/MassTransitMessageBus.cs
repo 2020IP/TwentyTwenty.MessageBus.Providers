@@ -79,8 +79,21 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
             {
                 var fault = new MessageFault<T>();
                 fault.FaultId = h.Message.FaultId;
+                fault.MessageId = h.MessageId;
                 fault.Message = h.Message.Message;
-                fault.ErrorMessage = string.Join(", ", h.Message.Exceptions.Select(e => e.Message));
+                fault.Errors = new List<Exception>();
+                foreach (var ex in h.Message.Exceptions)
+                {
+                    var netEx = new Exception(ex.Message)
+                    {
+                        Source = ex.Source,
+                    };
+                    netEx.Data.Add("MassTransitStackTrace", ex.StackTrace);
+                    netEx.Data.Add("MassTransitExceptionType", ex.ExceptionType);
+
+                    fault.Errors.Add(netEx);
+                }
+
                 handler(fault);
 
                 return Task.FromResult(false);
