@@ -3,6 +3,7 @@ using System;
 using System.Reflection;
 using TwentyTwenty.DomainDriven;
 using TwentyTwenty.DomainDriven.CQRS;
+using System.Threading.Tasks;
 
 namespace TwentyTwenty.MessageBus.Providers
 {
@@ -47,17 +48,17 @@ namespace TwentyTwenty.MessageBus.Providers
 
         public void RegisterCommandHandler<T>() where T : class, ICommand
         {
-            _registrar.RegisterHandler<T>(msg =>
+            _registrar.RegisterHandler<T>(async msg =>
             {
-                _services.GetService<ICommandHandler<T>>().Handle(msg);
+                await _services.GetService<ICommandHandler<T>>().Handle(msg);
             });
         }
 
         public void RegisterEventListener<T>() where T : class, IDomainEvent
         {
-            _registrar.RegisterHandler<T>(msg =>
+            _registrar.RegisterHandler<T>(async msg =>
             {
-                _services.GetService<IEventListener<T>>().Handle(msg);
+                await _services.GetService<IEventListener<T>>().Handle(msg);
             });
         }
     }

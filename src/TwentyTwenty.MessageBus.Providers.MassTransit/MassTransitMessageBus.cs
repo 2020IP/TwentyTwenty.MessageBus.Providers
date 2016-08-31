@@ -50,6 +50,35 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
 
             await endpoint.Send(command).ConfigureAwait(false);
         }
+
+        public virtual async Task Send(ICommand command, Type commandType)
+        {
+            if (!(commandType is ICommand))
+            {
+                throw new ArgumentException($"{nameof(commandType)} is not of type ICommand");
+            }
+
+            if (_busControl == null)
+            {
+                throw new InvalidOperationException("MassTransit bus must be started before sending commands.");
+            }
+            
+            ISendEndpoint endpoint;
+            if (_options.UseInMemoryBus)
+            {
+                endpoint = await _busControl.GetSendEndpoint(
+                    new Uri("loopback://localhost/" + command.GetType().Name))
+                    .ConfigureAwait(false);
+            }
+            else
+            {
+                endpoint = await _busControl.GetSendEndpoint(
+                    new Uri($"{_options.RabbitMQUri}/{command.GetType().Name}"))
+                    .ConfigureAwait(false);
+            }
+
+            await endpoint.Send(command, commandType).ConfigureAwait(false);
+        }
         
         public virtual Task Publish<T>(T @event) where T : class, IDomainEvent
         {
@@ -61,12 +90,26 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
             return _busControl.Publish(@event, @event.GetType());
         }
 
+        public virtual Task Publish(IDomainEvent @event, Type eventType)
+        {
+            if (!(@event is IDomainEvent))
+            {
+                throw new ArgumentException($"{nameof(@event)} is not of type IDomainEvent");
+            }
+
+            if (_busControl == null)
+            {
+                throw new InvalidOperationException("MassTransit bus must be started before publishing events.");
+            }
+            
+            return _busControl.Publish(@event, eventType);
+        }
+
         public virtual void RegisterHandler<T>(Action<T> handler) where T : class, IMessage
         {
             var consumer = new HandlerConfigurator<T>(h =>
             {
                 handler(h.Message);
-
                 return Task.FromResult(false);
             });
 
