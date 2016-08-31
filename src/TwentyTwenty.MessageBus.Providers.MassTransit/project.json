@@ -1,5 +1,5 @@
 ﻿{
-  "version": "1.0.3-*",
+  "version": "1.0.4-*",
   "title": "20|20 MessageBus.Providers.MassTransit",
   "description": "MassTransit Message Bus Abstractions",
   "authors": [ "2020IP" ],
@@ -16,10 +16,10 @@
 
   "dependencies": {
     "Microsoft.Extensions.DependencyInjection": "1.0.0",
-    "TwentyTwenty.DomainDriven": "1.0.4",
+    "TwentyTwenty.DomainDriven": "1.1.1",
     "MassTransit": "3.2.4",
     "MassTransit.RabbitMQ": "3.2.4",
-    "TwentyTwenty.MessageBus.Providers": "1.0.2-*"
+    "TwentyTwenty.MessageBus.Providers": { "target": "project" }
   },
 
   "frameworks": {
