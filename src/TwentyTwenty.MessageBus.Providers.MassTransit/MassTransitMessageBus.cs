@@ -35,7 +35,7 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
             Uri endpoint;
             if (_options.UseInMemoryBus)
             {
-                endpoint = new Uri("loopback://localhost/" + command.GetType().Name);
+                endpoint = new Uri($"loopback://localhost/{command.GetType().Name}");
             }
             else
             {
@@ -44,6 +44,32 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
 
             var createObject = typeof(MessageRequestClient<,>);
             var createGeneric = createObject.MakeGenericType(new Type[] { command.GetType(), typeof(TResult) });
+            var createInstance = Activator.CreateInstance(createGeneric, new object[] { _busControl, endpoint, TimeSpan.FromSeconds(30), default(TimeSpan?), null });
+            var requestMethod = createInstance.GetType().GetMethod("Request");
+            var response = (dynamic)requestMethod.Invoke(createInstance, new object[] { command, new CancellationToken() });
+            return await response;
+        }
+
+        public virtual async Task<TResult> Send<TResult>(ICommand command, Type commandType) 
+            where TResult : class, IResponse
+        {
+            if (!(commandType is ICommand))
+            {
+                throw new ArgumentException($"{nameof(commandType)} is not of type ICommand");
+            }
+
+            Uri endpoint;
+            if (_options.UseInMemoryBus)
+            {
+                endpoint = new Uri($"loopback://localhost/{commandType.Name}");
+            }
+            else
+            {
+                endpoint = new Uri($"{_options.RabbitMQUri}/{commandType.Name}");
+            }
+
+            var createObject = typeof(MessageRequestClient<,>);
+            var createGeneric = createObject.MakeGenericType(new Type[] { commandType, typeof(TResult) });
             var createInstance = Activator.CreateInstance(createGeneric, new object[] { _busControl, endpoint, TimeSpan.FromSeconds(30), default(TimeSpan?), null });
             var requestMethod = createInstance.GetType().GetMethod("Request");
             var response = (dynamic)requestMethod.Invoke(createInstance, new object[] { command, new CancellationToken() });
@@ -61,7 +87,7 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
             if (_options.UseInMemoryBus)
             {
                 endpoint = await _busControl.GetSendEndpoint(
-                    new Uri("loopback://localhost/" + command.GetType().Name))
+                    new Uri($"loopback://localhost/{command.GetType().Name}"))
                     .ConfigureAwait(false);
             }
             else
@@ -90,13 +116,13 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
             if (_options.UseInMemoryBus)
             {
                 endpoint = await _busControl.GetSendEndpoint(
-                    new Uri("loopback://localhost/" + command.GetType().Name))
+                    new Uri($"loopback://localhost/{commandType.Name}"))
                     .ConfigureAwait(false);
             }
             else
             {
                 endpoint = await _busControl.GetSendEndpoint(
-                    new Uri($"{_options.RabbitMQUri}/{command.GetType().Name}"))
+                    new Uri($"{_options.RabbitMQUri}/{commandType.Name}"))
                     .ConfigureAwait(false);
             }
 
