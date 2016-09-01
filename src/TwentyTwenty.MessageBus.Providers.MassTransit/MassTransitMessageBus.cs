@@ -53,11 +53,6 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
         public virtual async Task<TResult> Send<TResult>(ICommand command, Type commandType) 
             where TResult : class, IResponse
         {
-            if (!(commandType is ICommand))
-            {
-                throw new ArgumentException($"{nameof(commandType)} is not of type ICommand");
-            }
-
             Uri endpoint;
             if (_options.UseInMemoryBus)
             {
@@ -102,11 +97,6 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
 
         public virtual async Task Send(ICommand command, Type commandType)
         {
-            if (!(commandType is ICommand))
-            {
-                throw new ArgumentException($"{nameof(commandType)} is not of type ICommand");
-            }
-
             if (_busControl == null)
             {
                 throw new InvalidOperationException("MassTransit bus must be started before sending commands.");
