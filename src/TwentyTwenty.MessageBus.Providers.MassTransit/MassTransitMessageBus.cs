@@ -7,10 +7,11 @@ using System.Collections.Generic;
 using MassTransit.ConsumeConfigurators;
 using System.Linq;
 using System.Threading;
+using System.Reflection;
 
 namespace TwentyTwenty.MessageBus.Providers.MassTransit
 {
-    public class MassTransitMessageBus : IEventPublisher, ICommandSender, IHandlerRegistrar, IFaultHandlerRegistrar
+    public class MassTransitMessageBus : IEventPublisher, ICommandSender, ICommandSenderReceiver, IHandlerRegistrar, IHandlerRequestResponseRegistrar, IFaultHandlerRegistrar
     {
         private readonly Dictionary<string, List<IReceiveEndpointSpecification>> _handlers = 
             new Dictionary<string, List<IReceiveEndpointSpecification>>();
@@ -26,14 +27,36 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
 
             _options = options;
         }
-        
+
+        public virtual async Task<TResult> Send<T, TResult>(T command) 
+            where T : class, ICommand
+            where TResult : class, IResponse
+        {
+            Uri endpoint;
+            if (_options.UseInMemoryBus)
+            {
+                endpoint = new Uri("loopback://localhost/" + command.GetType().Name);
+            }
+            else
+            {
+                endpoint = new Uri($"{_options.RabbitMQUri}/{command.GetType().Name}");
+            }
+
+            var createObject = typeof(MessageRequestClient<,>);
+            var createGeneric = createObject.MakeGenericType(new Type[] { command.GetType(), typeof(TResult) });
+            var createInstance = Activator.CreateInstance(createGeneric, new object[] { _busControl, endpoint, TimeSpan.FromSeconds(30), default(TimeSpan?), null });
+            var requestMethod = createInstance.GetType().GetMethod("Request");
+            var response = (dynamic)requestMethod.Invoke(createInstance, new object[] { command, new CancellationToken() });
+            return await response;
+        }
+
         public virtual async Task Send<T>(T command) where T : class, ICommand
         {
             if (_busControl == null)
             {
                 throw new InvalidOperationException("MassTransit bus must be started before sending commands.");
             }
-            
+
             ISendEndpoint endpoint;
             if (_options.UseInMemoryBus)
             {
@@ -115,7 +138,21 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
 
             AddEndpointConsumer(typeof(T).Name, consumer);
         }
-        
+
+        public virtual void RegisterHandler<T, TResult>(Func<T, Task<TResult>> handler)
+            where T : class, IMessage
+            where TResult : class, IResponse
+        {
+            var consumer = new HandlerConfigurator<T>(async h =>
+            {
+                var response = await handler(h.Message);
+                await h.RespondAsync(response);
+            });
+
+            AddEndpointConsumer(typeof(T).Name, consumer);
+        }
+
+
         public virtual void RegisterHandler<T>(Action<MessageFault<T>> handler) where T : class, IMessage
         {
             var consumer = new HandlerConfigurator<Fault<T>>(h =>
