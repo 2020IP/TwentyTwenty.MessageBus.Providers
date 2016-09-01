@@ -22,9 +22,11 @@ namespace TwentyTwenty.MessageBus.Providers
             }
 
             var commandHandlers = services.AddCommandHandlers(commandHandlerAssembly);
+            var responesCommandHandlers = services.AddResponseCommandHandlers(commandHandlerAssembly);
             var eventListeners = services.AddEventListeners(eventListenerAssembly);
 
-            services.AddSingleton(s => new BusAutoRegistrar(s, s.GetRequiredService<IHandlerRegistrar>(), commandHandlers, eventListeners));
+            services.AddSingleton(s => new BusAutoRegistrar(s, s.GetRequiredService<IHandlerRegistrar>(), 
+                s.GetRequiredService<IHandlerRequestResponseRegistrar>(), commandHandlers, responesCommandHandlers, eventListeners));
         }
 
         private static HandlerRegistration[] AddCommandHandlers(this IServiceCollection services, Assembly asm)
@@ -37,6 +39,28 @@ namespace TwentyTwenty.MessageBus.Providers
                         ImplementationType = t,
                         ServiceType = i,
                         MessageType = i.GetGenericArguments().First(),
+                    })
+                    .FirstOrDefault())
+                .Where(h => h != null)
+                .Select(h =>
+                {
+                    services.AddScoped(h.ServiceType, h.ImplementationType);
+                    return h;
+                })
+                .ToArray();
+        }
+
+        private static HandlerRegistration[] AddResponseCommandHandlers(this IServiceCollection services, Assembly asm)
+        {
+            return asm.GetTypes()
+                .Select(t => t.GetInterfaces()
+                    .Where(i => i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(ICommandHandler<,>))
+                    .Select(i => new HandlerRegistration
+                    {
+                        ImplementationType = t,
+                        ServiceType = i,
+                        MessageType = i.GetGenericArguments().First(),
+                        ResponseType = i.GetGenericArguments().Last(),
                     })
                     .FirstOrDefault())
                 .Where(h => h != null)

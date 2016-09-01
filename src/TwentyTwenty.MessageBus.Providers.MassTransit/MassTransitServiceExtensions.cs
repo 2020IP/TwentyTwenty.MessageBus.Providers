@@ -18,8 +18,10 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
 
             services.AddSingleton(s => new MassTransitMessageBus(options));
             services.AddSingleton<ICommandSender>(s => s.GetService<MassTransitMessageBus>());
+            services.AddSingleton<ICommandSenderReceiver>(s => s.GetService<MassTransitMessageBus>());
             services.AddSingleton<IEventPublisher>(s => s.GetService<MassTransitMessageBus>());
             services.AddSingleton<IHandlerRegistrar>(s => s.GetService<MassTransitMessageBus>());
+            services.AddSingleton<IHandlerRequestResponseRegistrar>(s => s.GetService<MassTransitMessageBus>());
             services.AddSingleton<IFaultHandlerRegistrar>(s => s.GetService<MassTransitMessageBus>());
         }
 
