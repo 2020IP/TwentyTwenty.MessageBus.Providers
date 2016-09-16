@@ -52,7 +52,7 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
                 .Where(h => h != null)
                 .Select(h =>
                 {
-                    services.AddScoped(h.ServiceType, h.ImplementationType);
+                    services.AddTransient(h.ServiceType, h.ImplementationType);
                     return h;
                 })
                 .ToArray();

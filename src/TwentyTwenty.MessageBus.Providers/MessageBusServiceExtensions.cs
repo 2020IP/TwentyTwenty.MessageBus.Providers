@@ -44,7 +44,7 @@ namespace TwentyTwenty.MessageBus.Providers
                 .Where(h => h != null)
                 .Select(h =>
                 {
-                    services.AddScoped(h.ServiceType, h.ImplementationType);
+                    services.AddTransient(h.ServiceType, h.ImplementationType);
                     return h;
                 })
                 .ToArray();
@@ -66,7 +66,7 @@ namespace TwentyTwenty.MessageBus.Providers
                 .Where(h => h != null)
                 .Select(h =>
                 {
-                    services.AddScoped(h.ServiceType, h.ImplementationType);
+                    services.AddTransient(h.ServiceType, h.ImplementationType);
                     return h;
                 })
                 .ToArray();
@@ -87,7 +87,7 @@ namespace TwentyTwenty.MessageBus.Providers
                 .Where(l => l != null)
                 .Select(l =>
                 {
-                    services.AddScoped(l.ServiceType, l.ImplementationType);
+                    services.AddTransient(l.ServiceType, l.ImplementationType);
                     return l;
                 })
                 .ToArray();
