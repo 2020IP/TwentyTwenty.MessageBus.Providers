@@ -22,10 +22,12 @@ namespace TwentyTwenty.MessageBus.Providers
         //         throw new ArgumentException("The event listener assembly cannot be null.");
         //     }
 
-        //     var commandHandlers = services.AddCommandHandlers(commandHandlerAssembly);
-        //     var eventListeners = services.AddEventListeners(eventListenerAssembly);
+            // var commandHandlers = services.AddCommandHandlers(commandHandlerAssembly);
+            // var responesCommandHandlers = services.AddResponseCommandHandlers(commandHandlerAssembly);
+            // var eventListeners = services.AddEventListeners(eventListenerAssembly);
 
-        //     services.AddSingleton(s => new BusAutoRegistrar(s, s.GetRequiredService<IHandlerRegistrar>(), commandHandlers, eventListeners));
+            // services.AddSingleton(s => new BusAutoRegistrar(s, s.GetRequiredService<IHandlerRegistrar>(), 
+            //     s.GetRequiredService<IHandlerRequestResponseRegistrar>(), commandHandlers, responesCommandHandlers, eventListeners));
         // }
 
         public static void AddCommandHandlers(this IServiceCollection services, params Assembly[] assemblies)
@@ -62,6 +64,28 @@ namespace TwentyTwenty.MessageBus.Providers
                 services.AddSingleton(manager);
             }
             return manager;
+        }
+
+        private static HandlerRegistration[] AddResponseCommandHandlers(this IServiceCollection services, Assembly asm)
+        {
+            return asm.GetTypes()
+                .Select(t => t.GetInterfaces()
+                    .Where(i => i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(ICommandHandler<,>))
+                    .Select(i => new HandlerRegistration
+                    {
+                        ImplementationType = t,
+                        ServiceType = i,
+                        MessageType = i.GetGenericArguments().First(),
+                        ResponseType = i.GetGenericArguments().Last(),
+                    })
+                    .FirstOrDefault())
+                .Where(h => h != null)
+                .Select(h =>
+                {
+                    services.AddTransient(h.ServiceType, h.ImplementationType);
+                    return h;
+                })
+                .ToArray();
         }
 
         // private static HandlerRegistration[] AddCommandHandlers(this IServiceCollection services, Assembly asm)
@@ -140,6 +164,7 @@ namespace TwentyTwenty.MessageBus.Providers
                     ImplementationType = m,
                     ServiceType = i.Interface,
                     MessageType = i.Interface.GetGenericArguments().First(),
+                    ResponseType = i.Interface.GetGenericArguments().Skip(1).FirstOrDefault(),
                 }))
                 .ToArray();
             

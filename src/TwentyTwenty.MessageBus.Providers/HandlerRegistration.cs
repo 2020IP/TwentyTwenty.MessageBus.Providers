@@ -9,5 +9,7 @@ namespace TwentyTwenty.MessageBus.Providers
         public Type ServiceType { get; set; }
 
         public Type MessageType { get; set; }
+
+        public Type ResponseType { get; set; }
     }
 }

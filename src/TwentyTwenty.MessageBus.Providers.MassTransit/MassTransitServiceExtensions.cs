@@ -18,8 +18,10 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
 
             services.AddSingleton(s => new MassTransitMessageBus(options, s.GetRequiredService<HandlerManager>(), s));
             services.AddSingleton<ICommandSender>(s => s.GetService<MassTransitMessageBus>());
+            services.AddSingleton<ICommandSenderReceiver>(s => s.GetService<MassTransitMessageBus>());
             services.AddSingleton<IEventPublisher>(s => s.GetService<MassTransitMessageBus>());
             services.AddSingleton<IHandlerRegistrar>(s => s.GetService<MassTransitMessageBus>());
+            services.AddSingleton<IHandlerRequestResponseRegistrar>(s => s.GetService<MassTransitMessageBus>());
             services.AddSingleton<IFaultHandlerRegistrar>(s => s.GetService<MassTransitMessageBus>());
         }
 
@@ -50,7 +52,7 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
                 .Where(h => h != null)
                 .Select(h =>
                 {
-                    services.AddScoped(h.ServiceType, h.ImplementationType);
+                    services.AddTransient(h.ServiceType, h.ImplementationType);
                     return h;
                 })
                 .ToArray();
