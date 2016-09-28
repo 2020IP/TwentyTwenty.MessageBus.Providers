@@ -5,9 +5,9 @@ namespace TwentyTwenty.MessageBus.Providers
 {
     public static class MessageBusBuilderExtensions
     {
-        public static void UseMessageBusAutoRegistrar(this IApplicationBuilder app)
-        {
-            app.ApplicationServices.GetRequiredService<BusAutoRegistrar>().RegisterHandlers();
-        }
+        // public static void UseMessageBusAutoRegistrar(this IApplicationBuilder app)
+        // {
+        //     app.ApplicationServices.GetRequiredService<BusAutoRegistrar>().RegisterHandlers();
+        // }
     }
 }

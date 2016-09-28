@@ -5,6 +5,7 @@ using TwentyTwenty.DomainDriven;
 using TwentyTwenty.DomainDriven.CQRS;
 using System.Collections.Generic;
 using MassTransit.ConsumeConfigurators;
+using MassTransit.MicrosoftExtensionsDependencyInjectionIntegration;
 using System.Linq;
 using System.Threading;
 
@@ -15,16 +16,28 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
         private readonly Dictionary<string, List<IReceiveEndpointSpecification>> _handlers = 
             new Dictionary<string, List<IReceiveEndpointSpecification>>();
         private readonly MassTransitMessageBusOptions _options;
+        private readonly HandlerManager _manager;
+        private readonly IServiceProvider _services;
         private IBusControl _busControl = null;
 
-        public MassTransitMessageBus(MassTransitMessageBusOptions options)
+        public MassTransitMessageBus(MassTransitMessageBusOptions options, HandlerManager manager, IServiceProvider services)
         {
             if (options == null)
             {
-                throw new ArgumentException(nameof(options));
+                throw new ArgumentNullException(nameof(options));
+            }
+            if (manager == null)
+            {
+                throw new ArgumentNullException(nameof(manager));
+            }
+            if (services == null)
+            {
+                throw new ArgumentNullException(nameof(services));
             }
 
             _options = options;
+            _manager = manager;
+            _services = services;
         }
         
         public virtual async Task Send<T>(T command) where T : class, ICommand
@@ -71,6 +84,12 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
             });
 
             AddEndpointConsumer(typeof(T).Name, consumer);
+        }
+
+        public virtual void RegisterCommandHandler<TCommand>(ICommandHandler<TCommand> handler)
+            where TCommand : ICommand
+        {
+            
         }
         
         public virtual void RegisterHandler<T>(Action<MessageFault<T>> handler) where T : class, IMessage
@@ -162,15 +181,17 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
 
                     sbc.UseRetry(Retry.Immediate(5));
 
-                    foreach (var kvp in _handlers)
+                    foreach (var handler in _manager.GetAllHandlers())
                     {
-                        sbc.ReceiveEndpoint(host, kvp.Key, ep =>
-                        {
-                            foreach (var spec in kvp.Value)
+                        if (handler.ImplementationType.CanBeCastTo<IConsumer>())
+                        {                            
+                            ConsumerConfiguratorCache.Cache(handler.ImplementationType);
+                            
+                            sbc.ReceiveEndpoint(host, handler.MessageType.Name, c =>
                             {
-                                ep.AddEndpointSpecification(spec);
-                            }
-                        });
+                                c.LoadFrom(_services);
+                            });
+                        }
                     }
                 });
             }

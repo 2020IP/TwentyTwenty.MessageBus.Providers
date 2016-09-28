@@ -16,7 +16,7 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
                 throw new ArgumentException(nameof(options));
             }
 
-            services.AddSingleton(s => new MassTransitMessageBus(options));
+            services.AddSingleton(s => new MassTransitMessageBus(options, s.GetRequiredService<HandlerManager>(), s));
             services.AddSingleton<ICommandSender>(s => s.GetService<MassTransitMessageBus>());
             services.AddSingleton<IEventPublisher>(s => s.GetService<MassTransitMessageBus>());
             services.AddSingleton<IHandlerRegistrar>(s => s.GetService<MassTransitMessageBus>());
