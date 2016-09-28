@@ -16,7 +16,6 @@
 
   "dependencies": {
     "Microsoft.Extensions.DependencyInjection": "1.0.0",
-    "TwentyTwenty.DomainDriven": "1.1.2",
     "MassTransit": "1.0.0-core-1",
     "MassTransit.RabbitMqTransport": "1.0.0-core-1",
     "MassTransit.MicrosoftExtensionsDependencyInjectionIntegration": { "target": "project" },
