@@ -236,7 +236,7 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
 
             foreach(var handler in handlers)
             {
-                ConsumerConfiguratorCache.Cache(handler.ImplementationType);
+                ConsumerConfiguratorCache.Cache(handler.ServiceType);
             }
 
             if (_options.UseInMemoryBus)
