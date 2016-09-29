@@ -156,7 +156,7 @@ namespace Microsoft.Extensions.DependencyInjection
             
             foreach(var registration in registrations)
             {
-                services.AddScoped(registration.ServiceType, registration.ImplementationType);
+                services.AddScoped(registration.ImplementationType, registration.ImplementationType);
             }
 
             return registrations;
