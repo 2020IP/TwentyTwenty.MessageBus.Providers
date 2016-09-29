@@ -231,6 +231,14 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
         // Override and inject if you need a more custom startup configuration
         public virtual Task StartAsync()
         {
+            var handlers = _manager.GetAllHandlers()
+                .Where(h => h.ImplementationType.CanBeCastTo<IConsumer>());
+
+            foreach(var handler in handlers)
+            {
+                ConsumerConfiguratorCache.Cache(handler.ImplementationType);
+            }
+
             if (_options.UseInMemoryBus)
             {
                 _busControl = Bus.Factory.CreateUsingInMemory(sbc =>
@@ -242,14 +250,11 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
 
                     sbc.UseRetry(Retry.Immediate(5));
 
-                    foreach (var kvp in _handlers)
+                    foreach (var handler in handlers)
                     {
-                        sbc.ReceiveEndpoint(kvp.Key, ep =>
+                        sbc.ReceiveEndpoint(handler.MessageType.Name, c =>
                         {
-                            foreach (var spec in kvp.Value)
-                            {
-                                ep.AddEndpointSpecification(spec);
-                            }
+                            c.LoadFrom(_services);
                         });
                     }
                 });
@@ -271,17 +276,12 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
 
                     sbc.UseRetry(Retry.Immediate(5));
 
-                    foreach (var handler in _manager.GetAllHandlers())
+                    foreach (var handler in handlers)
                     {
-                        if (handler.ImplementationType.CanBeCastTo<IConsumer>())
-                        {                            
-                            ConsumerConfiguratorCache.Cache(handler.ImplementationType);
-                            
-                            sbc.ReceiveEndpoint(host, handler.MessageType.Name, c =>
-                            {
-                                c.LoadFrom(_services);
-                            });
-                        }
+                        sbc.ReceiveEndpoint(host, handler.MessageType.Name, c =>
+                        {
+                            c.LoadFrom(_services);
+                        });
                     }
                 });
             }

@@ -1,11 +1,12 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using System;
+﻿using System;
 using System.Linq;
 using System.Reflection;
 using TwentyTwenty.DomainDriven;
 using TwentyTwenty.DomainDriven.CQRS;
+using TwentyTwenty.MessageBus.Providers;
+using TwentyTwenty.MessageBus.Providers.MassTransit;
 
-namespace TwentyTwenty.MessageBus.Providers.MassTransit
+namespace Microsoft.Extensions.DependencyInjection
 {
     public static class MassTransitServiceExtensions
     {
@@ -15,6 +16,9 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
             {
                 throw new ArgumentException(nameof(options));
             }
+
+            // Force the adding of the HandlerManager
+            StaticHelpers.GetHandlerManager(services);
 
             services.AddSingleton(s => new MassTransitMessageBus(options, s.GetRequiredService<HandlerManager>(), s));
             services.AddSingleton<ICommandSender>(s => s.GetService<MassTransitMessageBus>());

@@ -1,14 +1,14 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using System;
+﻿using System;
 using System.Linq;
 using System.Reflection;
 using TwentyTwenty.DomainDriven;
 using TwentyTwenty.DomainDriven.CQRS;
 using System.Collections.Generic;
+using TwentyTwenty.MessageBus.Providers;
 
-namespace TwentyTwenty.MessageBus.Providers
+namespace Microsoft.Extensions.DependencyInjection
 {
-    public static class MessageBusServiceExtensions
+    public static class MessageBusExtensions
     {
         // public static void AddMessageBusHandlers(this IServiceCollection services, Assembly commandHandlerAssembly, Assembly eventListenerAssembly)
         // {
@@ -32,8 +32,8 @@ namespace TwentyTwenty.MessageBus.Providers
 
         public static void AddCommandHandlers(this IServiceCollection services, params Assembly[] assemblies)
         {
-            var manager = GetHandlerManager(services);
-            var handlers = AddHandlers(services, assemblies, typeof(ICommandHandler<>));
+            var manager = StaticHelpers.GetHandlerManager(services);
+            var handlers = AddHandlers(services, assemblies, typeof(ICommandHandler<>), typeof(ICommandHandler<,>));
             
             foreach (var handler in handlers)
             {
@@ -43,27 +43,13 @@ namespace TwentyTwenty.MessageBus.Providers
 
         public static void AddEventListeners(this IServiceCollection services, params Assembly[] assemblies)
         {
-            var manager = GetHandlerManager(services);
+            var manager = StaticHelpers.GetHandlerManager(services);
             var listeners = AddHandlers(services, assemblies, typeof(IEventListener<>));
 
             foreach (var listener in listeners)
             {
                 manager.EventListeners.Add(listener);
             }
-        }
-
-        private static HandlerManager GetHandlerManager(IServiceCollection services)
-        {
-            var manager = (HandlerManager)services
-                .FirstOrDefault(d => d.ServiceType == typeof(HandlerManager))
-                ?.ImplementationInstance;
-            
-            if (manager == null)
-            {
-                manager = new HandlerManager();
-                services.AddSingleton(manager);
-            }
-            return manager;
         }
 
         private static HandlerRegistration[] AddResponseCommandHandlers(this IServiceCollection services, Assembly asm)
@@ -130,7 +116,7 @@ namespace TwentyTwenty.MessageBus.Providers
         //         .ToArray();
         // }
 
-        private static IList<HandlerRegistration> AddHandlers(this IServiceCollection services, IEnumerable<Assembly> assembliesToScan, Type handlerType)
+        private static IList<HandlerRegistration> AddHandlers(this IServiceCollection services, IEnumerable<Assembly> assembliesToScan, params Type[] handlerTypes)
         {
             assembliesToScan = assembliesToScan as Assembly[] ?? assembliesToScan.ToArray();
             
@@ -139,7 +125,7 @@ namespace TwentyTwenty.MessageBus.Providers
 
             foreach (var type in assembliesToScan.SelectMany(a => a.ExportedTypes))
             {
-                var interfaceTypes = type.FindInterfacesThatClose(handlerType).ToArray();
+                var interfaceTypes = handlerTypes.SelectMany(h => type.FindInterfacesThatClose(h)).ToArray();
                 
                 if (!interfaceTypes.Any())
                 { 
@@ -163,7 +149,7 @@ namespace TwentyTwenty.MessageBus.Providers
                 {
                     ImplementationType = m,
                     ServiceType = i.Interface,
-                    MessageType = i.Interface.GetGenericArguments().First(),
+                    MessageType = i.Interface.GetGenericArguments().FirstOrDefault(),
                     ResponseType = i.Interface.GetGenericArguments().Skip(1).FirstOrDefault(),
                 }))
                 .ToArray();
