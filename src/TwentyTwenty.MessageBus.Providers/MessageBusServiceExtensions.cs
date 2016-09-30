@@ -41,7 +41,7 @@ namespace Microsoft.Extensions.DependencyInjection
 
             foreach (var listener in listeners)
             {
-                manager.EventListeners.Add(listener);
+                manager.FaultHandlers.Add(listener);
                 services.AddScoped(listener.ServiceType, listener.ImplementationType);
             }
         }

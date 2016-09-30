@@ -235,6 +235,8 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
         // Override and inject if you need a more custom startup configuration
         public virtual Task StartAsync()
         {
+            var faultHandlers = _manager.FaultHandlers.ToDictionary(h => h.MessageType);
+
             var handlers = _manager.GetAllHandlers()
                 .Where(h => h.ImplementationType.CanBeCastTo<IConsumer>());
 
@@ -280,19 +282,20 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
 
                     sbc.UseRetry(Retry.Immediate(5));
 
+                    HandlerRegistration faultRegistration;
+                    
                     foreach (var handler in handlers)
                     {
                         sbc.ReceiveEndpoint(host, handler.MessageType.Name, c =>
                         {
                             c.LoadFrom(_services);
-
-                            foreach(var faultHandler in _manager.FaultHandlers)
+                            
+                            if (faultHandlers.TryGetValue(handler.MessageType, out faultRegistration))
                             {
-                                ConsumerConfiguratorCache2.Configure(faultHandler, c, _services);
+                                ConsumerConfiguratorCache2.Configure(faultRegistration, c, _services);
                             }
                         });
                     }
-
                 });
             }
 
