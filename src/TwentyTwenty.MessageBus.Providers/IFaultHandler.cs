@@ -1,6 +1,6 @@
 using TwentyTwenty.DomainDriven;
 
-namespace TwentyTwenty.MessageBus.Providers.MassTransit
+namespace TwentyTwenty.MessageBus.Providers
 {
     public interface IFaultHandler<T> where T : class, IMessage
     {

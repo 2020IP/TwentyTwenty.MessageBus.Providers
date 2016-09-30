@@ -1,7 +1,7 @@
 using System;
 using TwentyTwenty.DomainDriven;
 
-namespace TwentyTwenty.MessageBus.Providers.MassTransit
+namespace TwentyTwenty.MessageBus.Providers
 {
     public interface IFaultHandlerRegistrar
     {

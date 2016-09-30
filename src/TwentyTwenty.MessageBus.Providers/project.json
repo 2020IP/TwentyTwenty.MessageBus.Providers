@@ -16,8 +16,9 @@
 
   "dependencies": {
     "Microsoft.Extensions.DependencyInjection": "1.0.0",
+    "Microsoft.Extensions.Logging": "1.0.0",
     "Microsoft.AspNetCore.Http.Abstractions": "1.0.0",
-    "TwentyTwenty.DomainDriven": "1.2.1-refactor-00023"
+    "TwentyTwenty.DomainDriven": "1.2.1-refactor-00024"
   },
 
   "frameworks": {

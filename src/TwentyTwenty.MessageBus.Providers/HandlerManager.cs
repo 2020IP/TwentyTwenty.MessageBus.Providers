@@ -9,7 +9,9 @@ namespace TwentyTwenty.MessageBus.Providers
 
         public IList<HandlerRegistration> EventListeners { get; } = new List<HandlerRegistration>();
 
+        public IList<HandlerRegistration> FaultHandlers { get; } = new List<HandlerRegistration>();
+
         public IEnumerable<HandlerRegistration> GetAllHandlers() 
-            => Enumerable.Concat(CommandHandlers, EventListeners);
+            => CommandHandlers.Concat(EventListeners).Concat(FaultHandlers);
     }
 }

@@ -70,5 +70,46 @@ namespace TwentyTwenty.MessageBus.Providers
         {
             return !type.GetTypeInfo().IsAbstract && !type.GetTypeInfo().IsInterface;
         }
+
+        public static IList<HandlerRegistration> FindHandlers(this IEnumerable<Assembly> assembliesToScan, params Type[] handlerTypes)
+        {
+            assembliesToScan = assembliesToScan as Assembly[] ?? assembliesToScan.ToArray();
+            
+            var concretions = new List<Type>();
+            var interfaces = new HashSet<Type>();
+
+            foreach (var type in assembliesToScan.SelectMany(a => a.ExportedTypes))
+            {
+                var interfaceTypes = handlerTypes.SelectMany(h => type.FindInterfacesThatClose(h)).ToArray();
+                
+                if (!interfaceTypes.Any())
+                { 
+                    continue;
+                }
+
+                if (type.IsConcrete())
+                {
+                    concretions.Add(type);
+                }
+
+                foreach (var interfaceType in interfaceTypes)
+                {
+                    interfaces.Add(interfaceType);
+                }
+            }
+
+            var registrations = interfaces
+                .Select(i => new { Interface = i, Matches = concretions.Where(t => t.CanBeCastTo(i)).ToArray() })
+                .SelectMany(i => i.Matches.Select(m => new HandlerRegistration
+                {
+                    ImplementationType = m,
+                    ServiceType = i.Interface,
+                    MessageType = i.Interface.GetGenericArguments().FirstOrDefault(),
+                    ResponseType = i.Interface.GetGenericArguments().Skip(1).FirstOrDefault(),
+                }))
+                .ToArray();
+
+            return registrations;
+        }
     }
 }

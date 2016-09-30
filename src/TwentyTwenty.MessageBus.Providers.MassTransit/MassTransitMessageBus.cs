@@ -9,11 +9,15 @@ using MassTransit.MicrosoftExtensionsDependencyInjectionIntegration;
 using System.Linq;
 using System.Threading;
 using System.Reflection;
+using Microsoft.Extensions.Logging;
+using System.Collections.Concurrent;
 
 namespace TwentyTwenty.MessageBus.Providers.MassTransit
 {
-    public class MassTransitMessageBus : IEventPublisher, ICommandSender, ICommandSenderReceiver, IHandlerRegistrar, IHandlerRequestResponseRegistrar, IFaultHandlerRegistrar
+    public class MassTransitMessageBus : IEventPublisher, ICommandSender, ICommandSenderReceiver, 
+        IHandlerRegistrar, IHandlerRequestResponseRegistrar, IFaultHandlerRegistrar
     {
+        private readonly ILogger<MassTransitMessageBus> _logger;
         private readonly Dictionary<string, List<IReceiveEndpointSpecification>> _handlers = 
             new Dictionary<string, List<IReceiveEndpointSpecification>>();
         private readonly MassTransitMessageBusOptions _options;
@@ -21,7 +25,7 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
         private readonly IServiceProvider _services;
         private IBusControl _busControl = null;
 
-        public MassTransitMessageBus(MassTransitMessageBusOptions options, HandlerManager manager, IServiceProvider services)
+        public MassTransitMessageBus(MassTransitMessageBusOptions options, HandlerManager manager, IServiceProvider services, ILoggerFactory loggerFactory)
         {
             if (options == null)
             {
@@ -35,7 +39,12 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
             {
                 throw new ArgumentNullException(nameof(services));
             }
+            if (loggerFactory == null)
+            {
+                throw new ArgumentException(nameof(loggerFactory));
+            }
 
+            _logger = loggerFactory.CreateLogger<MassTransitMessageBus>();
             _options = options;
             _manager = manager;
             _services = services;
@@ -144,11 +153,6 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
 
         public virtual Task Publish(IDomainEvent @event, Type eventType)
         {
-            if (!(@event is IDomainEvent))
-            {
-                throw new ArgumentException($"{nameof(@event)} is not of type IDomainEvent");
-            }
-
             if (_busControl == null)
             {
                 throw new InvalidOperationException("MassTransit bus must be started before publishing events.");
@@ -281,8 +285,14 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
                         sbc.ReceiveEndpoint(host, handler.MessageType.Name, c =>
                         {
                             c.LoadFrom(_services);
+
+                            foreach(var faultHandler in _manager.FaultHandlers)
+                            {
+                                ConsumerConfiguratorCache2.Configure(faultHandler, c, _services);
+                            }
                         });
                     }
+
                 });
             }
 
@@ -292,6 +302,50 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
         public virtual Task StopAsync(CancellationToken token = default(CancellationToken))
         {
             return _busControl.StopAsync(token);
+        }
+    }
+
+    public static class ConsumerConfiguratorCache2
+    {
+        static CachedConfigurator GetOrAdd(HandlerRegistration registration)
+        {
+            return Cached.Instance.GetOrAdd(registration.ImplementationType, _ =>
+                (CachedConfigurator)Activator.CreateInstance(typeof(CachedConfigurator<>).MakeGenericType(registration.MessageType)));
+        }
+
+        public static void Configure(HandlerRegistration registration, IReceiveEndpointConfigurator configurator, IServiceProvider container)
+        {
+            GetOrAdd(registration).Configure(configurator, container);
+        }
+
+        public static void Cache(HandlerRegistration registration)
+        {
+            GetOrAdd(registration);
+        }
+
+        public static IEnumerable<Type> GetConsumers()
+        {
+            return Cached.Instance.Keys;
+        }        
+
+        interface CachedConfigurator
+        {
+            void Configure(IReceiveEndpointConfigurator configurator, IServiceProvider services);
+        }
+
+        class CachedConfigurator<T> : CachedConfigurator
+            where T : class, IMessage
+        {
+            public void Configure(IReceiveEndpointConfigurator configurator, IServiceProvider services)
+            {
+                configurator.Consumer(new FaultConsumerFactory<T>(services));
+            }
+        }
+
+        static class Cached
+        {
+            internal static readonly ConcurrentDictionary<Type, CachedConfigurator> Instance =
+                new ConcurrentDictionary<Type, CachedConfigurator>();
         }
     }
 }

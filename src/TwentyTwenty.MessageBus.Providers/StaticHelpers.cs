@@ -16,6 +16,7 @@ namespace TwentyTwenty.MessageBus.Providers
                 manager = new HandlerManager();
                 services.AddSingleton(manager);
             }
+            
             return manager;
         }
     }

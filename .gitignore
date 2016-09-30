@@ -211,3 +211,5 @@ FakesAssemblies/
 # NuGet exe
 .nuget
 .build/
+
+project.lock.json
