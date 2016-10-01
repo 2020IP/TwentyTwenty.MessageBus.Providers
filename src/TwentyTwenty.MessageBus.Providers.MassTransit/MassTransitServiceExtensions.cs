@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Linq;
-using System.Reflection;
-using MassTransit;
 using Microsoft.Extensions.Logging;
 using TwentyTwenty.DomainDriven;
 using TwentyTwenty.DomainDriven.CQRS;
@@ -20,15 +17,12 @@ namespace Microsoft.Extensions.DependencyInjection
             }
 
             // Force the adding of the HandlerManager
-            var manager = StaticHelpers.GetHandlerManager(services);
+            StaticHelpers.GetHandlerManager(services);
 
             services.AddSingleton(s => new MassTransitMessageBus(options, s.GetRequiredService<HandlerManager>(), s, s.GetRequiredService<ILoggerFactory>()));
             services.AddSingleton<ICommandSender>(s => s.GetService<MassTransitMessageBus>());
             services.AddSingleton<ICommandSenderReceiver>(s => s.GetService<MassTransitMessageBus>());
             services.AddSingleton<IEventPublisher>(s => s.GetService<MassTransitMessageBus>());
-            services.AddSingleton<IHandlerRegistrar>(s => s.GetService<MassTransitMessageBus>());
-            services.AddSingleton<IHandlerRequestResponseRegistrar>(s => s.GetService<MassTransitMessageBus>());
-            services.AddSingleton<IFaultHandlerRegistrar>(s => s.GetService<MassTransitMessageBus>());
         }
     }
 }
