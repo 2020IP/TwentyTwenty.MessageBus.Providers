@@ -1,9 +1,6 @@
-﻿using System;
-using System.Linq;
-using System.Reflection;
+﻿using System.Reflection;
 using TwentyTwenty.DomainDriven;
 using TwentyTwenty.DomainDriven.CQRS;
-using System.Collections.Generic;
 using TwentyTwenty.MessageBus.Providers;
 
 namespace Microsoft.Extensions.DependencyInjection
@@ -18,7 +15,7 @@ namespace Microsoft.Extensions.DependencyInjection
             foreach (var handler in handlers)
             {
                 manager.CommandHandlers.Add(handler);
-                services.AddScoped(handler.ImplementationType, handler.ImplementationType);
+                services.AddScoped(handler.ServiceType, handler.ImplementationType);
             }
         }
 
@@ -30,7 +27,7 @@ namespace Microsoft.Extensions.DependencyInjection
             foreach (var listener in listeners)
             {
                 manager.EventListeners.Add(listener);
-                services.AddScoped(listener.ImplementationType, listener.ImplementationType);
+                services.AddScoped(listener.ServiceType, listener.ImplementationType);
             }
         }
 

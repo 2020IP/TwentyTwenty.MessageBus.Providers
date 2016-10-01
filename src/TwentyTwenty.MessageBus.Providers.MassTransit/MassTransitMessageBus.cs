@@ -5,7 +5,6 @@ using TwentyTwenty.DomainDriven;
 using TwentyTwenty.DomainDriven.CQRS;
 using System.Collections.Generic;
 using MassTransit.ConsumeConfigurators;
-using MassTransit.MicrosoftExtensionsDependencyInjectionIntegration;
 using System.Linq;
 using System.Threading;
 using System.Reflection;
@@ -235,35 +234,26 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
         // Override and inject if you need a more custom startup configuration
         public virtual Task StartAsync()
         {
-            var faultHandlers = _manager.FaultHandlers.ToDictionary(h => h.MessageType);
-
-            var handlers = _manager.GetAllHandlers()
-                .Where(h => h.ImplementationType.CanBeCastTo<IConsumer>());
-
-            foreach(var handler in handlers)
-            {
-                ConsumerConfiguratorCache.Cache(handler.ImplementationType);
-            }
-
             if (_options.UseInMemoryBus)
             {
-                _busControl = Bus.Factory.CreateUsingInMemory(sbc =>
-                {
-                    if (_options.BusObserver != null)
-                    {
-                        sbc.AddBusFactorySpecification(_options.BusObserver);
-                    }
+                throw new NotSupportedException("InMemory bus is not currently supported");
+                // _busControl = Bus.Factory.CreateUsingInMemory(sbc =>
+                // {
+                //     if (_options.BusObserver != null)
+                //     {
+                //         sbc.AddBusFactorySpecification(_options.BusObserver);
+                //     }
 
-                    sbc.UseRetry(Retry.Immediate(5));
+                //     sbc.UseRetry(Retry.Immediate(5));
 
-                    foreach (var handler in handlers)
-                    {
-                        sbc.ReceiveEndpoint(handler.MessageType.Name, c =>
-                        {
-                            c.LoadFrom(_services);
-                        });
-                    }
-                });
+                //     foreach (var handler in handlers)
+                //     {
+                //         sbc.ReceiveEndpoint(handler.MessageType.Name, c =>
+                //         {
+                //             c.LoadFrom(_services);
+                //         });
+                //     }
+                // });
             }
             else
             {
@@ -282,17 +272,13 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
 
                     sbc.UseRetry(Retry.Immediate(5));
 
-                    HandlerRegistration faultRegistration;
-                    
-                    foreach (var handler in handlers)
+                    foreach (var msgTypes in _manager.GetAllHandlers().GroupBy(h => h.MessageType))
                     {
-                        sbc.ReceiveEndpoint(host, handler.MessageType.Name, c =>
+                        sbc.ReceiveEndpoint(host, msgTypes.Key.Name, c =>
                         {
-                            c.LoadFrom(_services);
-                            
-                            if (faultHandlers.TryGetValue(handler.MessageType, out faultRegistration))
+                            foreach (var handler in msgTypes)
                             {
-                                ConsumerConfiguratorCache2.Configure(faultRegistration, c, _services);
+                                ConsumerConfiguratorCache.Configure(handler, c, _services);
                             }
                         });
                     }
@@ -305,50 +291,6 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
         public virtual Task StopAsync(CancellationToken token = default(CancellationToken))
         {
             return _busControl.StopAsync(token);
-        }
-    }
-
-    public static class ConsumerConfiguratorCache2
-    {
-        static CachedConfigurator GetOrAdd(HandlerRegistration registration)
-        {
-            return Cached.Instance.GetOrAdd(registration.ImplementationType, _ =>
-                (CachedConfigurator)Activator.CreateInstance(typeof(CachedConfigurator<>).MakeGenericType(registration.MessageType)));
-        }
-
-        public static void Configure(HandlerRegistration registration, IReceiveEndpointConfigurator configurator, IServiceProvider container)
-        {
-            GetOrAdd(registration).Configure(configurator, container);
-        }
-
-        public static void Cache(HandlerRegistration registration)
-        {
-            GetOrAdd(registration);
-        }
-
-        public static IEnumerable<Type> GetConsumers()
-        {
-            return Cached.Instance.Keys;
-        }        
-
-        interface CachedConfigurator
-        {
-            void Configure(IReceiveEndpointConfigurator configurator, IServiceProvider services);
-        }
-
-        class CachedConfigurator<T> : CachedConfigurator
-            where T : class, IMessage
-        {
-            public void Configure(IReceiveEndpointConfigurator configurator, IServiceProvider services)
-            {
-                configurator.Consumer(new FaultConsumerFactory<T>(services));
-            }
-        }
-
-        static class Cached
-        {
-            internal static readonly ConcurrentDictionary<Type, CachedConfigurator> Instance =
-                new ConcurrentDictionary<Type, CachedConfigurator>();
         }
     }
 }

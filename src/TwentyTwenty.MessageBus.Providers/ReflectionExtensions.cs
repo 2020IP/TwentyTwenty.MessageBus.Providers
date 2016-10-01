@@ -111,5 +111,29 @@ namespace TwentyTwenty.MessageBus.Providers
 
             return registrations;
         }
+
+        public static bool Closes(this Type type, Type openType)
+        {
+            if (type == null) return false;
+
+            var typeInfo = type.GetTypeInfo();
+
+            if (typeInfo.IsGenericType && type.GetGenericTypeDefinition() == openType) return true;
+
+            foreach (var @interface in type.GetInterfaces())
+            {
+                if (@interface.Closes(openType)) return true;
+            }
+
+            var baseType = typeInfo.BaseType;
+            if (baseType == null) return false;
+
+            var baseTypeInfo = baseType.GetTypeInfo();
+
+            var closes = baseTypeInfo.IsGenericType && baseType.GetGenericTypeDefinition() == openType;
+            if (closes) return true;
+
+            return typeInfo.BaseType?.Closes(openType) ?? false;
+        }
     }
 }

@@ -18,7 +18,6 @@
     "Microsoft.Extensions.DependencyInjection": "1.0.0",
     "MassTransit": "1.0.0-core-1",
     "MassTransit.RabbitMqTransport": "1.0.0-core-1",
-    "MassTransit.MicrosoftExtensionsDependencyInjectionIntegration": { "target": "project" },
     "TwentyTwenty.MessageBus.Providers": { "target": "project" }
   },
 
