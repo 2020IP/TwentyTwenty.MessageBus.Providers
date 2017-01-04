@@ -196,7 +196,10 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
                         sbc.AddBusFactorySpecification(_options.BusObserver);
                     }
 
-                    sbc.UseRetry(Retry.Immediate(5));
+                    if (_options.RetryPolicy != null)
+                    {
+                        sbc.UseRetry(_options.RetryPolicy);
+                    }
 
                     foreach (var msgTypes in _manager.GetAllHandlers().GroupBy(h => h.MessageType))
                     {
