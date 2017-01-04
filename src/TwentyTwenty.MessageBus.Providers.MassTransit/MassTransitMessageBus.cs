@@ -227,7 +227,10 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
                         sbc.AddBusFactorySpecification(_options.BusObserver);
                     }
 
-                    sbc.UseRetry(Retry.Immediate(5));
+                    if (_options.RetryPolicy != null)
+                    {
+                        sbc.UseRetry(_options.RetryPolicy);
+                    }
 
                     foreach (var kvp in _handlers)
                     {
@@ -256,7 +259,10 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
                         sbc.AddBusFactorySpecification(_options.BusObserver);
                     }
 
-                    sbc.UseRetry(Retry.Immediate(5));
+                    if (_options.RetryPolicy != null)
+                    {
+                        sbc.UseRetry(_options.RetryPolicy);
+                    }
 
                     foreach (var kvp in _handlers)
                     {

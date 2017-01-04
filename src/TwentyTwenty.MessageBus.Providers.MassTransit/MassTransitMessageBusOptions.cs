@@ -1,10 +1,13 @@
-﻿using MassTransit.Builders;
+﻿using MassTransit;
+using MassTransit.Builders;
 
 namespace TwentyTwenty.MessageBus.Providers.MassTransit
 {
     public class MassTransitMessageBusOptions
     {
         public IBusFactorySpecification BusObserver { get; set; }
+
+        public IRetryPolicy RetryPolicy { get; set; } = Retry.Immediate(5);
 
         public bool UseInMemoryBus { get; set; }
 
