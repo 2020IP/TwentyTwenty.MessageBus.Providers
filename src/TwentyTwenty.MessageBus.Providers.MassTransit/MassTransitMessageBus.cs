@@ -214,6 +214,26 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
                 });
             }
 
+            if (_options.ReceiveObserver != null)
+            {
+                _busControl.ConnectReceiveObserver(_options.ReceiveObserver);
+            }
+
+            if (_options.SendObserver != null)
+            {
+                _busControl.ConnectSendObserver(_options.SendObserver);
+            }
+
+            if (_options.ConsumeObserver != null)
+            {
+                _busControl.ConnectConsumeObserver(_options.ConsumeObserver);
+            }
+
+            if (_options.PublishObserver != null)
+            {
+                _busControl.ConnectPublishObserver(_options.PublishObserver);
+            }
+
             return _busControl.StartAsync();
         }
 
