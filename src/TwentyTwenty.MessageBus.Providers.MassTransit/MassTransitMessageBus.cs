@@ -226,7 +226,7 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
                     }
 
                     foreach (var msgTypes in _manager.GetAllHandlers()
-                        .Where(h => h.ServiceType == typeof(ICommandHandler<>))
+                        .Where(h => h.ServiceType == typeof(ICommandHandler<,>) || h.ServiceType == typeof(ICommandHandler<>))
                         .GroupBy(h => h.MessageType))
                     {
                         sbc.ReceiveEndpoint(host, msgTypes.Key.Name, c =>
