@@ -201,7 +201,33 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
                         sbc.UseRetry(_options.RetryPolicy);
                     }
 
-                    foreach (var msgTypes in _manager.GetAllHandlers().GroupBy(h => h.MessageType))
+                    foreach (var msgTypes in _manager.GetAllHandlers().GroupBy(h => h.ImplementationType))
+                    {
+                        sbc.ReceiveEndpoint(host, msgTypes.Key.Name, c =>
+                        {
+                            foreach (var handler in msgTypes)
+                            {
+                                ConsumerConfiguratorCache.Configure(handler, c, _services);
+                            }
+                        });
+                    }
+
+                    foreach (var msgTypes in _manager.GetAllHandlers()
+                        .Where(h => h.ServiceType == typeof(IEventListener<>) || h.ServiceType == typeof(IFaultHandler<>))
+                        .GroupBy(h => h.ImplementationType))
+                    {
+                        sbc.ReceiveEndpoint(host, msgTypes.Key.Name, c =>
+                        {
+                            foreach (var handler in msgTypes)
+                            {
+                                ConsumerConfiguratorCache.Configure(handler, c, _services);
+                            }
+                        });
+                    }
+
+                    foreach (var msgTypes in _manager.GetAllHandlers()
+                        .Where(h => h.ServiceType == typeof(ICommandHandler<>))
+                        .GroupBy(h => h.MessageType))
                     {
                         sbc.ReceiveEndpoint(host, msgTypes.Key.Name, c =>
                         {
