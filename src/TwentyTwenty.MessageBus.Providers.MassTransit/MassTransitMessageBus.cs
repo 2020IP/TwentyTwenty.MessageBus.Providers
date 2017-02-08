@@ -201,19 +201,10 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
                         sbc.UseRetry(_options.RetryPolicy);
                     }
 
-                    foreach (var msgTypes in _manager.GetAllHandlers().GroupBy(h => h.ImplementationType))
-                    {
-                        sbc.ReceiveEndpoint(host, msgTypes.Key.Name, c =>
-                        {
-                            foreach (var handler in msgTypes)
-                            {
-                                ConsumerConfiguratorCache.Configure(handler, c, _services);
-                            }
-                        });
-                    }
+                    var allHandlers = _manager.GetAllHandlers().ToList();
 
-                    foreach (var msgTypes in _manager.GetAllHandlers()
-                        .Where(h => h.ServiceType == typeof(IEventListener<>) || h.ServiceType == typeof(IFaultHandler<>))
+                    foreach (var msgTypes in allHandlers
+                        .Where(h => h.GenericType == typeof(IEventListener<>) || h.GenericType == typeof(IFaultHandler<>))
                         .GroupBy(h => h.ImplementationType))
                     {
                         sbc.ReceiveEndpoint(host, msgTypes.Key.Name, c =>
@@ -225,8 +216,8 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
                         });
                     }
 
-                    foreach (var msgTypes in _manager.GetAllHandlers()
-                        .Where(h => h.ServiceType == typeof(ICommandHandler<,>) || h.ServiceType == typeof(ICommandHandler<>))
+                    foreach (var msgTypes in allHandlers
+                        .Where(h => h.GenericType == typeof(ICommandHandler<,>) || h.GenericType == typeof(ICommandHandler<>))
                         .GroupBy(h => h.MessageType))
                     {
                         sbc.ReceiveEndpoint(host, msgTypes.Key.Name, c =>

@@ -104,6 +104,7 @@ namespace TwentyTwenty.MessageBus.Providers
                 {
                     ImplementationType = m,
                     ServiceType = i.Interface,
+                    GenericType = i.Interface.GetGenericTypeDefinition(),
                     MessageType = i.Interface.GetGenericArguments().FirstOrDefault(),
                     ResponseType = i.Interface.GetGenericArguments().Skip(1).FirstOrDefault(),
                 }))
