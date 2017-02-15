@@ -3,13 +3,10 @@ using System.Threading.Tasks;
 using MassTransit;
 using TwentyTwenty.DomainDriven;
 using TwentyTwenty.DomainDriven.CQRS;
-using System.Collections.Generic;
-using MassTransit.ConsumeConfigurators;
 using System.Linq;
 using System.Threading;
 using System.Reflection;
 using Microsoft.Extensions.Logging;
-using System.Collections.Concurrent;
 
 namespace TwentyTwenty.MessageBus.Providers.MassTransit
 {
@@ -46,31 +43,40 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
             _services = services;
         }
 
-        public virtual async Task<TResult> Send<T, TResult>(T command) 
-            where T : class, ICommand
-            where TResult : class, IResponse
+        public virtual async Task<TResult> Send<TResult>(ICommand command) where TResult : class, IResponse
         {
+            if (_busControl == null)
+            {
+                throw new InvalidOperationException("MassTransit bus must be started before sending commands.");
+            }
+
+            var type = command.GetType(); 
+
             Uri endpoint;
             if (_options.UseInMemoryBus)
             {
-                endpoint = new Uri($"loopback://localhost/{command.GetType().Name}");
+                endpoint = new Uri($"loopback://localhost/{type.Name}");
             }
             else
             {
-                endpoint = new Uri($"{_options.RabbitMQUri}/{command.GetType().Name}");
+                endpoint = new Uri($"{_options.RabbitMQUri}/{type.Name}");
             }
 
             var createObject = typeof(MessageRequestClient<,>);
-            var createGeneric = createObject.MakeGenericType(new Type[] { command.GetType(), typeof(TResult) });
+            var createGeneric = createObject.MakeGenericType(new Type[] { type, typeof(TResult) });
             var createInstance = Activator.CreateInstance(createGeneric, new object[] { _busControl, endpoint, TimeSpan.FromSeconds(30), default(TimeSpan?), null });
             var requestMethod = createInstance.GetType().GetMethod("Request");
             var response = (dynamic)requestMethod.Invoke(createInstance, new object[] { command, new CancellationToken() });
             return await response;
         }
 
-        public virtual async Task<TResult> Send<TResult>(ICommand command, Type commandType) 
-            where TResult : class, IResponse
+        public virtual async Task<TResult> Send<TResult>(ICommand command, Type commandType) where TResult : class, IResponse
         {
+            if (_busControl == null)
+            {
+                throw new InvalidOperationException("MassTransit bus must be started before sending commands.");
+            }
+
             Uri endpoint;
             if (_options.UseInMemoryBus)
             {
@@ -89,24 +95,26 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
             return await response;
         }
 
-        public virtual async Task Send<T>(T command) where T : class, ICommand
+        public virtual async Task Send(ICommand command)
         {
             if (_busControl == null)
             {
                 throw new InvalidOperationException("MassTransit bus must be started before sending commands.");
             }
 
+            var type = command.GetType().Name;
+
             ISendEndpoint endpoint;
             if (_options.UseInMemoryBus)
             {
                 endpoint = await _busControl.GetSendEndpoint(
-                    new Uri($"loopback://localhost/{command.GetType().Name}"))
+                    new Uri($"loopback://localhost/{type}"))
                     .ConfigureAwait(false);
             }
             else
             {
                 endpoint = await _busControl.GetSendEndpoint(
-                    new Uri($"{_options.RabbitMQUri}/{command.GetType().Name}"))
+                    new Uri($"{_options.RabbitMQUri}/{type}"))
                     .ConfigureAwait(false);
             }
 
@@ -137,7 +145,7 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
             await endpoint.Send(command, commandType).ConfigureAwait(false);
         }
         
-        public virtual Task Publish<T>(T @event) where T : class, IDomainEvent
+        public virtual Task Publish(IDomainEvent @event)
         {
             if (_busControl == null)
             {
