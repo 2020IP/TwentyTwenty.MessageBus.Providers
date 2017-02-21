@@ -102,23 +102,23 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
                 throw new InvalidOperationException("MassTransit bus must be started before sending commands.");
             }
 
-            var type = command.GetType().Name;
+            var commandType = command.GetType();
 
             ISendEndpoint endpoint;
             if (_options.UseInMemoryBus)
             {
                 endpoint = await _busControl.GetSendEndpoint(
-                    new Uri($"loopback://localhost/{type}"))
+                    new Uri($"loopback://localhost/{commandType.Name}"))
                     .ConfigureAwait(false);
             }
             else
             {
                 endpoint = await _busControl.GetSendEndpoint(
-                    new Uri($"{_options.RabbitMQUri}/{type}"))
+                    new Uri($"{_options.RabbitMQUri}/{commandType.Name}"))
                     .ConfigureAwait(false);
             }
 
-            await endpoint.Send(command).ConfigureAwait(false);
+            await endpoint.Send(command, commandType).ConfigureAwait(false);
         }
 
         public virtual async Task Send(ICommand command, Type commandType)
