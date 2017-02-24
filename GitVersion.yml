@@ -3,12 +3,10 @@ branches:
   dev(elop)?(ment)?$:
     tag: ci
   netcore:
-    regex: netcore
     mode: ContinuousDelivery
-    tag: 'useBranchName'
+    tag: 'netcore'
     increment: Patch
     prevent-increment-of-merged-branch-version: true
     track-merge-target: false
-    tracks-release-branches: false
 ignore:
   sha: []
