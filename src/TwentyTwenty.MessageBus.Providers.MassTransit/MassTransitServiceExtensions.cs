@@ -1,11 +1,11 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Linq;
-using System.Reflection;
+﻿using System;
+using Microsoft.Extensions.Logging;
 using TwentyTwenty.DomainDriven;
 using TwentyTwenty.DomainDriven.CQRS;
+using TwentyTwenty.MessageBus.Providers;
+using TwentyTwenty.MessageBus.Providers.MassTransit;
 
-namespace TwentyTwenty.MessageBus.Providers.MassTransit
+namespace Microsoft.Extensions.DependencyInjection
 {
     public static class MassTransitServiceExtensions
     {
@@ -16,46 +16,13 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
                 throw new ArgumentException(nameof(options));
             }
 
-            services.AddSingleton(s => new MassTransitMessageBus(options));
+            // Force the adding of the HandlerManager
+            StaticHelpers.GetHandlerManager(services);
+
+            services.AddSingleton(s => new MassTransitMessageBus(options, s.GetRequiredService<HandlerManager>(), s, s.GetRequiredService<ILoggerFactory>()));
             services.AddSingleton<ICommandSender>(s => s.GetService<MassTransitMessageBus>());
             services.AddSingleton<ICommandSenderReceiver>(s => s.GetService<MassTransitMessageBus>());
             services.AddSingleton<IEventPublisher>(s => s.GetService<MassTransitMessageBus>());
-            services.AddSingleton<IHandlerRegistrar>(s => s.GetService<MassTransitMessageBus>());
-            services.AddSingleton<IHandlerRequestResponseRegistrar>(s => s.GetService<MassTransitMessageBus>());
-            services.AddSingleton<IFaultHandlerRegistrar>(s => s.GetService<MassTransitMessageBus>());
-        }
-
-        public static void AddMasstTransitFaultHandlers(this IServiceCollection services, Assembly faultHandlerAssembly)
-        {
-            if (faultHandlerAssembly == null)
-            {
-                throw new ArgumentException("The fault handler assembly cannot be null.");
-            }
-
-            var faultHandlers = services.AddFaultHandlers(faultHandlerAssembly);
-
-            services.AddSingleton(s => new MassTransitFaultBusAutoRegistrar(s, s.GetRequiredService<IFaultHandlerRegistrar>(), faultHandlers));
-        }
-
-        private static HandlerRegistration[] AddFaultHandlers(this IServiceCollection services, Assembly asm)
-        {
-            return asm.GetTypes()
-                .Select(t => t.GetInterfaces()
-                    .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IFaultHandler<>))
-                    .Select(i => new HandlerRegistration
-                    {
-                        ImplementationType = t,
-                        ServiceType = i,
-                        MessageType = i.GetGenericArguments().First(),
-                    })
-                    .FirstOrDefault())
-                .Where(h => h != null)
-                .Select(h =>
-                {
-                    services.AddTransient(h.ServiceType, h.ImplementationType);
-                    return h;
-                })
-                .ToArray();
         }
     }
 }

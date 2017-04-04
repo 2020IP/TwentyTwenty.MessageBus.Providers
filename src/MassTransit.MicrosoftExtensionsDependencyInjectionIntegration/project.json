@@ -1,0 +1,21 @@
+{
+  "version": "1.0.0-*",
+  "buildOptions": {
+    "debugType": "portable"
+  },
+  "dependencies": {
+    "MassTransit": "1.0.0-core-1",
+    "Microsoft.Extensions.DependencyInjection": "1.0.0"
+  },
+  "frameworks": {
+    "net452": { 
+      "frameworkAssemblies": {
+        "System.Runtime": "4.0.10.0"
+      }
+    },
+    "netstandard1.5": {
+      "dependencies": {
+      }
+    }
+  }
+}

@@ -3,56 +3,80 @@ using System.Threading.Tasks;
 using MassTransit;
 using TwentyTwenty.DomainDriven;
 using TwentyTwenty.DomainDriven.CQRS;
-using System.Collections.Generic;
-using MassTransit.ConsumeConfigurators;
 using System.Linq;
 using System.Threading;
 using System.Reflection;
+using Microsoft.Extensions.Logging;
 
 namespace TwentyTwenty.MessageBus.Providers.MassTransit
 {
-    public class MassTransitMessageBus : IEventPublisher, ICommandSender, ICommandSenderReceiver, IHandlerRegistrar, IHandlerRequestResponseRegistrar, IFaultHandlerRegistrar
+    public class MassTransitMessageBus : IEventPublisher, ICommandSender, ICommandSenderReceiver
     {
-        private readonly Dictionary<string, List<IReceiveEndpointSpecification>> _handlers = 
-            new Dictionary<string, List<IReceiveEndpointSpecification>>();
+        private readonly ILogger<MassTransitMessageBus> _logger;
         private readonly MassTransitMessageBusOptions _options;
+        private readonly HandlerManager _manager;
+        private readonly IServiceProvider _services;
         private IBusControl _busControl = null;
 
-        public MassTransitMessageBus(MassTransitMessageBusOptions options)
+        public MassTransitMessageBus(MassTransitMessageBusOptions options, HandlerManager manager, IServiceProvider services, ILoggerFactory loggerFactory)
         {
             if (options == null)
             {
-                throw new ArgumentException(nameof(options));
+                throw new ArgumentNullException(nameof(options));
+            }
+            if (manager == null)
+            {
+                throw new ArgumentNullException(nameof(manager));
+            }
+            if (services == null)
+            {
+                throw new ArgumentNullException(nameof(services));
+            }
+            if (loggerFactory == null)
+            {
+                throw new ArgumentException(nameof(loggerFactory));
             }
 
+            _logger = loggerFactory.CreateLogger<MassTransitMessageBus>();
             _options = options;
+            _manager = manager;
+            _services = services;
         }
 
-        public virtual async Task<TResult> Send<T, TResult>(T command) 
-            where T : class, ICommand
-            where TResult : class, IResponse
+        public virtual async Task<TResult> Send<TResult>(ICommand command) where TResult : class, IResponse
         {
+            if (_busControl == null)
+            {
+                throw new InvalidOperationException("MassTransit bus must be started before sending commands.");
+            }
+
+            var type = command.GetType(); 
+
             Uri endpoint;
             if (_options.UseInMemoryBus)
             {
-                endpoint = new Uri($"loopback://localhost/{command.GetType().Name}");
+                endpoint = new Uri($"loopback://localhost/{type.Name}");
             }
             else
             {
-                endpoint = new Uri($"{_options.RabbitMQUri}/{command.GetType().Name}");
+                endpoint = new Uri($"{_options.RabbitMQUri}/{type.Name}");
             }
 
             var createObject = typeof(MessageRequestClient<,>);
-            var createGeneric = createObject.MakeGenericType(new Type[] { command.GetType(), typeof(TResult) });
+            var createGeneric = createObject.MakeGenericType(new Type[] { type, typeof(TResult) });
             var createInstance = Activator.CreateInstance(createGeneric, new object[] { _busControl, endpoint, TimeSpan.FromSeconds(30), default(TimeSpan?), null });
             var requestMethod = createInstance.GetType().GetMethod("Request");
             var response = (dynamic)requestMethod.Invoke(createInstance, new object[] { command, new CancellationToken() });
             return await response;
         }
 
-        public virtual async Task<TResult> Send<TResult>(ICommand command, Type commandType) 
-            where TResult : class, IResponse
+        public virtual async Task<TResult> Send<TResult>(ICommand command, Type commandType) where TResult : class, IResponse
         {
+            if (_busControl == null)
+            {
+                throw new InvalidOperationException("MassTransit bus must be started before sending commands.");
+            }
+
             Uri endpoint;
             if (_options.UseInMemoryBus)
             {
@@ -71,28 +95,30 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
             return await response;
         }
 
-        public virtual async Task Send<T>(T command) where T : class, ICommand
+        public virtual async Task Send(ICommand command)
         {
             if (_busControl == null)
             {
                 throw new InvalidOperationException("MassTransit bus must be started before sending commands.");
             }
 
+            var commandType = command.GetType();
+
             ISendEndpoint endpoint;
             if (_options.UseInMemoryBus)
             {
                 endpoint = await _busControl.GetSendEndpoint(
-                    new Uri($"loopback://localhost/{command.GetType().Name}"))
+                    new Uri($"loopback://localhost/{commandType.Name}"))
                     .ConfigureAwait(false);
             }
             else
             {
                 endpoint = await _busControl.GetSendEndpoint(
-                    new Uri($"{_options.RabbitMQUri}/{command.GetType().Name}"))
+                    new Uri($"{_options.RabbitMQUri}/{commandType.Name}"))
                     .ConfigureAwait(false);
             }
 
-            await endpoint.Send(command).ConfigureAwait(false);
+            await endpoint.Send(command, commandType).ConfigureAwait(false);
         }
 
         public virtual async Task Send(ICommand command, Type commandType)
@@ -119,7 +145,7 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
             await endpoint.Send(command, commandType).ConfigureAwait(false);
         }
         
-        public virtual Task Publish<T>(T @event) where T : class, IDomainEvent
+        public virtual Task Publish(IDomainEvent @event)
         {
             if (_busControl == null)
             {
@@ -131,11 +157,6 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
 
         public virtual Task Publish(IDomainEvent @event, Type eventType)
         {
-            if (!(@event is IDomainEvent))
-            {
-                throw new ArgumentException($"{nameof(@event)} is not of type IDomainEvent");
-            }
-
             if (_busControl == null)
             {
                 throw new InvalidOperationException("MassTransit bus must be started before publishing events.");
@@ -144,105 +165,29 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
             return _busControl.Publish(@event, eventType);
         }
 
-        public virtual void RegisterHandler<T>(Action<T> handler) where T : class, IMessage
-        {
-            var consumer = new HandlerConfigurator<T>(h =>
-            {
-                handler(h.Message);
-                return Task.FromResult(false);
-            });
-
-            AddEndpointConsumer(typeof(T).Name, consumer);
-        }
-
-        public virtual void RegisterHandler<T, TResult>(Func<T, Task<TResult>> handler)
-            where T : class, IMessage
-            where TResult : class, IResponse
-        {
-            var consumer = new HandlerConfigurator<T>(async h =>
-            {
-                var response = await handler(h.Message);
-                await h.RespondAsync(response);
-            });
-
-            AddEndpointConsumer(typeof(T).Name, consumer);
-        }
-
-
-        public virtual void RegisterHandler<T>(Action<MessageFault<T>> handler) where T : class, IMessage
-        {
-            var consumer = new HandlerConfigurator<Fault<T>>(h =>
-            {
-                var fault = new MessageFault<T>();
-                fault.FaultId = h.Message.FaultId;
-                fault.MessageId = h.MessageId;
-                fault.Message = h.Message.Message;
-                fault.Errors = new List<Exception>();
-                foreach (var ex in h.Message.Exceptions)
-                {
-                    var netEx = new Exception(ex.Message)
-                    {
-                        Source = ex.Source,
-                    };
-                    netEx.Data.Add("MassTransitStackTrace", ex.StackTrace);
-                    netEx.Data.Add("MassTransitExceptionType", ex.ExceptionType);
-
-                    fault.Errors.Add(netEx);
-                }
-
-                handler(fault);
-
-                return Task.FromResult(false);
-            });
-            
-            AddEndpointConsumer(typeof(T).Name, consumer);
-        }
-        
-        private void AddEndpointConsumer(string queueName, IReceiveEndpointSpecification spec)
-        {
-            if (_handlers.Keys.Contains(queueName))
-            {
-                _handlers[queueName].Add(spec);
-            }
-            else
-            {
-                var configs = new List<IReceiveEndpointSpecification>
-                {
-                    spec
-                };
-                
-                _handlers.Add(queueName, configs);
-            }
-        }
-
         // Override and inject if you need a more custom startup configuration
         public virtual Task StartAsync()
         {
             if (_options.UseInMemoryBus)
             {
-                _busControl = Bus.Factory.CreateUsingInMemory(sbc =>
-                {
-                    if (_options.BusObserver != null)
-                    {
-                        sbc.AddBusFactorySpecification(_options.BusObserver);
-                    }
+                throw new NotSupportedException("InMemory bus is not currently supported");
+                // _busControl = Bus.Factory.CreateUsingInMemory(sbc =>
+                // {
+                //     if (_options.BusObserver != null)
+                //     {
+                //         sbc.AddBusFactorySpecification(_options.BusObserver);
+                //     }
 
-                    if (_options.RetryPolicy != null)
-                    {
-                        sbc.UseRetry(_options.RetryPolicy);
-                    }
+                //     sbc.UseRetry(Retry.Immediate(5));
 
-                    foreach (var kvp in _handlers)
-                    {
-                        sbc.ReceiveEndpoint(kvp.Key, ep =>
-                        {
-                            foreach (var spec in kvp.Value)
-                            {
-                                ep.AddEndpointSpecification(spec);
-                            }
-                        });
-                    }
-                });
+                //     foreach (var handler in handlers)
+                //     {
+                //         sbc.ReceiveEndpoint(handler.MessageType.Name, c =>
+                //         {
+                //             c.LoadFrom(_services);
+                //         });
+                //     }
+                // });
             }
             else
             {
@@ -264,20 +209,62 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
                         sbc.UseRetry(_options.RetryPolicy);
                     }
 
-                    foreach (var kvp in _handlers)
+                    var allHandlers = _manager.GetAllHandlers().ToList();
+
+                    foreach (var msgTypes in allHandlers
+                        .Where(h => h.GenericType == typeof(IEventListener<>) || h.GenericType == typeof(IFaultHandler<>))
+                        .GroupBy(h => h.ImplementationType))
                     {
-                        sbc.ReceiveEndpoint(host, kvp.Key, ep =>
+                        sbc.ReceiveEndpoint(host, msgTypes.Key.Name, c =>
                         {
-                            foreach (var spec in kvp.Value)
+                            foreach (var handler in msgTypes)
                             {
-                                ep.AddEndpointSpecification(spec);
+                                ConsumerConfiguratorCache.Configure(handler, c, _services);
+                            }
+                        });
+                    }
+
+                    foreach (var msgTypes in allHandlers
+                        .Where(h => h.GenericType == typeof(ICommandHandler<,>) || h.GenericType == typeof(ICommandHandler<>))
+                        .GroupBy(h => h.MessageType))
+                    {
+                        sbc.ReceiveEndpoint(host, msgTypes.Key.Name, c =>
+                        {
+                            foreach (var handler in msgTypes)
+                            {
+                                ConsumerConfiguratorCache.Configure(handler, c, _services);
                             }
                         });
                     }
                 });
             }
 
+            if (_options.ReceiveObserver != null)
+            {
+                _busControl.ConnectReceiveObserver(_options.ReceiveObserver);
+            }
+
+            if (_options.SendObserver != null)
+            {
+                _busControl.ConnectSendObserver(_options.SendObserver);
+            }
+
+            if (_options.ConsumeObserver != null)
+            {
+                _busControl.ConnectConsumeObserver(_options.ConsumeObserver);
+            }
+
+            if (_options.PublishObserver != null)
+            {
+                _busControl.ConnectPublishObserver(_options.PublishObserver);
+            }
+
             return _busControl.StartAsync();
+        }
+
+        public virtual Task StopAsync(CancellationToken token = default(CancellationToken))
+        {
+            return _busControl.StopAsync(token);
         }
     }
 }
