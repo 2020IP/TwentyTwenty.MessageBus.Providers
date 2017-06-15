@@ -1,5 +1,5 @@
 {
-  "version": "1.2.0",
+  "version": "1.2.1-*",
   "title": "20|20 MessageBus.Providers",
   "description": "Message Bus and Provider Abstractions",
   "authors": [ "2020IP" ],

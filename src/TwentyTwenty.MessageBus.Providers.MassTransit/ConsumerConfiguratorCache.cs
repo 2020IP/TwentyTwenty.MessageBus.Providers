@@ -23,7 +23,7 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
                 }
                 else if (registration.ServiceType.Closes(typeof(IEventListener<>)))
                 {
-                    return typeof(CachedEventListenerConfigurator<>).CloseAndBuildAs<CachedConfigurator>(registration.MessageType);
+                    return typeof(CachedEventListenerConfigurator<,>).CloseAndBuildAs<CachedConfigurator>(registration.MessageType, registration.ImplementationType);
                 }
                 else if (registration.ServiceType.Closes(typeof(ICommandHandler<,>)))
                 {
@@ -31,7 +31,7 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
                 }
                 else if (registration.ServiceType.Closes(typeof(IFaultHandler<>)))
                 {
-                    return typeof(CachedFaultConfigurator<>).CloseAndBuildAs<CachedConfigurator>(registration.MessageType);
+                    return typeof(CachedFaultConfigurator<,>).CloseAndBuildAs<CachedConfigurator>(registration.MessageType, registration.ImplementationType);
                 }
 
                 throw new InvalidOperationException($"Unable to find Configurator for service type `{registration.ServiceType.Name}`");
@@ -58,12 +58,13 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
             void Configure(IReceiveEndpointConfigurator configurator, IServiceProvider services);
         }
 
-        class CachedFaultConfigurator<T> : CachedConfigurator
-            where T : class, IMessage
+        class CachedFaultConfigurator<TMessage, THandler> : CachedConfigurator
+            where TMessage : class, IMessage
+            where THandler : class, IFaultHandler<TMessage>
         {
             public void Configure(IReceiveEndpointConfigurator configurator, IServiceProvider services)
             {
-                configurator.Consumer(new FaultConsumerFactory<T>(services));
+                configurator.Consumer(new FaultConsumerFactory<TMessage, THandler>(services));
             }
         }
 
@@ -86,12 +87,13 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
             }
         }
 
-        class CachedEventListenerConfigurator<TEvent> : CachedConfigurator
+        class CachedEventListenerConfigurator<TEvent, TListener> : CachedConfigurator
             where TEvent : class, IDomainEvent
+            where TListener : class, IHandle<TEvent>
         {
             public void Configure(IReceiveEndpointConfigurator configurator, IServiceProvider services)
             {
-                configurator.Consumer(new EventListenerConsumerFactory<TEvent>(services));
+                configurator.Consumer(new EventListenerConsumerFactory<TEvent, TListener>(services));
             }
         }
     }
