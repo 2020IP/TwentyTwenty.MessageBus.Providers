@@ -166,7 +166,7 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
         }
 
         // Override and inject if you need a more custom startup configuration
-        public virtual Task StartAsync()
+        public virtual Task StartAsync(Type[] listenerNoQueueTypes = null)
         {
             if (_options.UseInMemoryBus)
             {
@@ -215,13 +215,26 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
                         .Where(h => h.GenericType == typeof(IEventListener<>) || h.GenericType == typeof(IFaultHandler<>))
                         .GroupBy(h => h.ImplementationType))
                     {
-                        sbc.ReceiveEndpoint(host, msgTypes.Key.Name, c =>
+                        if (listenerNoQueueTypes != null && listenerNoQueueTypes.Length > 0)
                         {
-                            foreach (var handler in msgTypes)
+                            sbc.ReceiveEndpoint(host, c =>
                             {
-                                ConsumerConfiguratorCache.Configure(handler, c, _services);
-                            }
-                        });
+                                foreach (var handler in msgTypes)
+                                {
+                                    ConsumerConfiguratorCache.Configure(handler, c, _services);
+                                }
+                            });
+                        }
+                        else
+                        {
+                            sbc.ReceiveEndpoint(host, msgTypes.Key.Name, c =>
+                            {
+                                foreach (var handler in msgTypes)
+                                {
+                                    ConsumerConfiguratorCache.Configure(handler, c, _services);
+                                }
+                            });
+                        }
                     }
 
                     foreach (var msgTypes in allHandlers
