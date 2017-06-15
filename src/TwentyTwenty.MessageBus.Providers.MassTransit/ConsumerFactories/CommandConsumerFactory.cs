@@ -16,7 +16,7 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit.ConsumerFactories
 
             if (handler == null)
             {
-                throw new ConsumerException($"Unable to resolve fault handler type 'IFaultHandler<{typeof(TMessage).Name}>'.");                    
+                throw new ConsumerException($"Unable to resolve command handler type 'ICommandHandler<{typeof(TMessage).Name}>'.");                    
             }
             
             return new MassTransitConsumer<TMessage>(handler);   
