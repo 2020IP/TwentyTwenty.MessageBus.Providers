@@ -21,6 +21,10 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
                 {
                     return typeof(CachedCommandConfigurator<>).CloseAndBuildAs<CachedConfigurator>(registration.MessageType);
                 }
+                else if (registration.ServiceType.Closes(typeof(IDistributedEventListener<>)))
+                {
+                    return typeof(CachedDistributedEventListenerConfigurator<,>).CloseAndBuildAs<CachedConfigurator>(registration.MessageType, registration.ImplementationType);
+                }
                 else if (registration.ServiceType.Closes(typeof(IEventListener<>)))
                 {
                     return typeof(CachedEventListenerConfigurator<,>).CloseAndBuildAs<CachedConfigurator>(registration.MessageType, registration.ImplementationType);
@@ -94,6 +98,16 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
             public void Configure(IReceiveEndpointConfigurator configurator, IServiceProvider services)
             {
                 configurator.Consumer(new EventListenerConsumerFactory<TEvent, TListener>(services));
+            }
+        }
+
+        class CachedDistributedEventListenerConfigurator<TEvent, TListener> : CachedConfigurator
+            where TEvent : class, IDomainEvent
+            where TListener : class, IHandle<TEvent>
+        {
+            public void Configure(IReceiveEndpointConfigurator configurator, IServiceProvider services)
+            {
+                configurator.Consumer(new DistributedEventListenerConsumerFactory<TEvent, TListener>(services));
             }
         }
     }

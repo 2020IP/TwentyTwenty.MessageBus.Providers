@@ -6,9 +6,9 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
 {
     public static class MassTransitBuilderExtensions
     {
-        public static void StartMassTransit(this IApplicationBuilder app, Type[] listenerNoQueueTypes = null)
+        public static void StartMassTransit(this IApplicationBuilder app)
         {
-            app.ApplicationServices.GetRequiredService<MassTransitMessageBus>().StartAsync(listenerNoQueueTypes).Wait();
+            app.ApplicationServices.GetRequiredService<MassTransitMessageBus>().StartAsync().Wait();
         }
 
         public static void StopMassTransit(this IApplicationBuilder app)

@@ -212,29 +212,29 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
                     var allHandlers = _manager.GetAllHandlers().ToList();
 
                     foreach (var msgTypes in allHandlers
+                        .Where(h => h.GenericType == typeof(IDistributedEventListener<>))
+                        .GroupBy(h => h.ImplementationType))
+                    {
+                        sbc.ReceiveEndpoint(host, c =>
+                        {
+                            foreach (var handler in msgTypes)
+                            {
+                                ConsumerConfiguratorCache.Configure(handler, c, _services);
+                            }
+                        });
+                    }
+
+                    foreach (var msgTypes in allHandlers
                         .Where(h => h.GenericType == typeof(IEventListener<>) || h.GenericType == typeof(IFaultHandler<>))
                         .GroupBy(h => h.ImplementationType))
                     {
-                        if (listenerNoQueueTypes != null && listenerNoQueueTypes.Length > 0 && listenerNoQueueTypes.Contains(msgTypes.Key))
+                        sbc.ReceiveEndpoint(host, msgTypes.Key.Name, c =>
                         {
-                            sbc.ReceiveEndpoint(host, c =>
+                            foreach (var handler in msgTypes)
                             {
-                                foreach (var handler in msgTypes)
-                                {
-                                    ConsumerConfiguratorCache.Configure(handler, c, _services);
-                                }
-                            });
-                        }
-                        else
-                        {
-                            sbc.ReceiveEndpoint(host, msgTypes.Key.Name, c =>
-                            {
-                                foreach (var handler in msgTypes)
-                                {
-                                    ConsumerConfiguratorCache.Configure(handler, c, _services);
-                                }
-                            });
-                        }
+                                ConsumerConfiguratorCache.Configure(handler, c, _services);
+                            }
+                        });
                     }
 
                     foreach (var msgTypes in allHandlers

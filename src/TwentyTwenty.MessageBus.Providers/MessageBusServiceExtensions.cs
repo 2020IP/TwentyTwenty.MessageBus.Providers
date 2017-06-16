@@ -31,6 +31,18 @@ namespace Microsoft.Extensions.DependencyInjection
             }
         }
 
+        public static void AddDistributedEventListeners(this IServiceCollection services, params Assembly[] assemblies)
+        {
+            var manager = StaticHelpers.GetHandlerManager(services);
+            var listeners = assemblies.FindHandlers(typeof(IDistributedEventListener<>));
+
+            foreach (var listener in listeners)
+            {
+                manager.DistributedEventListeners.Add(listener);
+                services.AddSingleton(listener.ImplementationType);
+            }
+        }
+
         public static void AddFaultHandlers(this IServiceCollection services, params Assembly[] assemblies)
         {
             var manager = StaticHelpers.GetHandlerManager(services);
