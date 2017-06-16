@@ -1,13 +1,14 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using System;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace TwentyTwenty.MessageBus.Providers.MassTransit
 {
     public static class MassTransitBuilderExtensions
     {
-        public static void StartMassTransit(this IApplicationBuilder app)
+        public static void StartMassTransit(this IApplicationBuilder app, Type[] listenerNoQueueTypes = null)
         {
-            app.ApplicationServices.GetRequiredService<MassTransitMessageBus>().StartAsync().Wait();
+            app.ApplicationServices.GetRequiredService<MassTransitMessageBus>().StartAsync(listenerNoQueueTypes).Wait();
         }
 
         public static void StopMassTransit(this IApplicationBuilder app)

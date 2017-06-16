@@ -215,7 +215,7 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
                         .Where(h => h.GenericType == typeof(IEventListener<>) || h.GenericType == typeof(IFaultHandler<>))
                         .GroupBy(h => h.ImplementationType))
                     {
-                        if (listenerNoQueueTypes != null && listenerNoQueueTypes.Length > 0)
+                        if (listenerNoQueueTypes != null && listenerNoQueueTypes.Length > 0 && listenerNoQueueTypes.Contains(msgTypes.Key))
                         {
                             sbc.ReceiveEndpoint(host, c =>
                             {
