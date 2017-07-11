@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading;
 using System.Reflection;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 
 namespace TwentyTwenty.MessageBus.Providers.MassTransit
 {
@@ -197,6 +198,18 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
                     {
                         h.Username(_options.RabbitMQUsername);
                         h.Password(_options.RabbitMQPassword);
+                    });
+
+                    sbc.ConfigureJsonDeserializer(c => {
+                        c.NullValueHandling = NullValueHandling.Include;
+                        c.DefaultValueHandling = DefaultValueHandling.Include;
+                        return c;
+                    });
+
+                    sbc.ConfigureJsonSerializer(c => {
+                        c.NullValueHandling = NullValueHandling.Include;
+                        c.DefaultValueHandling = DefaultValueHandling.Include;
+                        return c;
                     });
 
                     if (_options.BusObserver != null)
