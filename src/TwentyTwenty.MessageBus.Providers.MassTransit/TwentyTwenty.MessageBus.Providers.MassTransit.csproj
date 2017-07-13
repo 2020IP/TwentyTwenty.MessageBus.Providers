@@ -1,0 +1,40 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>MassTransit Message Bus Abstractions</Description>
+    <AssemblyTitle>20|20 MessageBus.Providers.MassTransit</AssemblyTitle>
+    <VersionPrefix>1.3.3</VersionPrefix>
+    <Authors>2020IP</Authors>
+    <TargetFrameworks>net452;netstandard1.6</TargetFrameworks>
+    <AssemblyName>TwentyTwenty.MessageBus.Providers.MassTransit</AssemblyName>
+    <PackageId>TwentyTwenty.MessageBus.Providers.MassTransit</PackageId>
+    <PackageTags>Mass Transit Message Bus MessageBus MassTransit TwentyTwenty 2020</PackageTags>
+    <PackageIconUrl>https://avatars3.githubusercontent.com/u/15891935?v=3&amp;s=64</PackageIconUrl>
+    <PackageProjectUrl>https://github.com/2020IP/TwentyTwenty.MessageBus.Providers</PackageProjectUrl>
+    <PackageLicenseUrl>https://github.com/2020IP/TwentyTwenty.MessageBus.Providers/master/LICENSE.txt</PackageLicenseUrl>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/2020IP/TwentyTwenty.MessageBus.Providers</RepositoryUrl>
+    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
+    <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
+    <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
+    <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
+    <GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
+    <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../TwentyTwenty.MessageBus.Providers/TwentyTwenty.MessageBus.Providers.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MassTransit" Version="4.0.0.1208-develop" />
+    <PackageReference Include="MassTransit.RabbitMq" Version="4.0.0.1208-develop" />
+    <PackageReference Include="MassTransit.Extensions.DependencyInjection" Version="4.0.0.1208-develop" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net452' ">
+    <Reference Include="System" />
+    <Reference Include="Microsoft.CSharp" />
+  </ItemGroup>
+
+</Project>

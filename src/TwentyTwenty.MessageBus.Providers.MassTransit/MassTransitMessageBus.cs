@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using MassTransit;
+using GreenPipes;
 using TwentyTwenty.DomainDriven;
 using TwentyTwenty.DomainDriven.CQRS;
 using System.Linq;
@@ -218,7 +219,7 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
                     }
 
                     if (_options.RetryPolicy != null)
-                    {
+                    {                        
                         sbc.UseRetry(_options.RetryPolicy);
                     }
 

@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using GreenPipes;
 using MassTransit;
 using MassTransit.Pipeline;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,11 +19,6 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit.ConsumerFactories
             _services = services;
         }
 
-        void IProbeSite.Probe(ProbeContext context)
-        {
-            context.CreateConsumerFactoryScope<TConsumer>("ttcr");
-        }
-
         async Task IConsumerFactory<TConsumer>.Send<T>(ConsumeContext<T> context, IPipe<ConsumerConsumeContext<TConsumer, T>> next)
         {
             var scopeFactory = _services.GetRequiredService<IServiceScopeFactory>();
@@ -34,9 +30,14 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit.ConsumerFactories
                 var consumerConsumeContext = context.PushConsumer(consumer);
 
                 await next.Send(consumerConsumeContext).ConfigureAwait(false);
-            }   
+            }
         }
 
-        protected abstract TConsumer GetConsumer(IServiceProvider services); 
+        void IProbeSite.Probe(ProbeContext context)
+        {
+            context.CreateConsumerFactoryScope<TConsumer>("ttcr");
+        }
+
+        protected abstract TConsumer GetConsumer(IServiceProvider services);
     }
 }
