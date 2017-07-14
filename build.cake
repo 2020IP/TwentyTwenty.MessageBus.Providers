@@ -37,18 +37,18 @@ Task("Build")
     .IsDependentOn("Clean")
     .IsDependentOn("Restore")
     .Does(() => {
-        // DotNetCoreBuild(".", new DotNetCoreBuildSettings
-        // {
-        //     Configuration = configuration,
-        //     VersionSuffix = versionInfo.PreReleaseTag,
-        //     ArgumentCustomization = args => args.Append("-p:VersionPrefix=" + versionInfo.MajorMinorPatch),
-        // });
-
-        MSBuild("./TwentyTwenty.MessageBus.Providers.sln", new MSBuildSettings {
-            //Verbosity = Verbosity.Minimal,
-            //ToolVersion = MSBuildToolVersion.VS2015,
+        DotNetCoreBuild(".", new DotNetCoreBuildSettings
+        {
             Configuration = configuration,
+            VersionSuffix = versionInfo.PreReleaseTag,
+            ArgumentCustomization = args => args.Append("-p:VersionPrefix=" + versionInfo.MajorMinorPatch),
         });
+
+        // MSBuild("./TwentyTwenty.MessageBus.Providers.sln", new MSBuildSettings {
+        //     //Verbosity = Verbosity.Minimal,
+        //     //ToolVersion = MSBuildToolVersion.VS2015,
+        //     Configuration = configuration,
+        // });
     });
 
 Task("Package")
