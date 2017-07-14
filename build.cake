@@ -40,7 +40,7 @@ Task("Build")
         DotNetCoreBuild(".", new DotNetCoreBuildSettings
         {
             Configuration = configuration,
-            VersionSuffix = versionInfo.PreReleaseTag,
+            VersionSuffix = versionInfo.PreReleaseLabel + versionInfo.PreReleaseNumber,
             ArgumentCustomization = args => args.Append("-p:VersionPrefix=" + versionInfo.MajorMinorPatch),
         });
 
