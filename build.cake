@@ -43,12 +43,6 @@ Task("Build")
             VersionSuffix = versionInfo.PreReleaseLabel + versionInfo.PreReleaseNumber,
             ArgumentCustomization = args => args.Append("-p:VersionPrefix=" + versionInfo.MajorMinorPatch),
         });
-
-        // MSBuild("./TwentyTwenty.MessageBus.Providers.sln", new MSBuildSettings {
-        //     //Verbosity = Verbosity.Minimal,
-        //     //ToolVersion = MSBuildToolVersion.VS2015,
-        //     Configuration = configuration,
-        // });
     });
 
 Task("Package")
