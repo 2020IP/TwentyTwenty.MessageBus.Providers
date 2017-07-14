@@ -1,10 +1,10 @@
-#tool "nuget:?package=GitReleaseNotes"
-#tool "nuget:?package=GitVersion.CommandLine"
+//#tool "nuget:?package=GitReleaseNotes"
+#tool nuget:?package=GitVersion.CommandLine
 
+GitVersion versionInfo = null;
 var target = Argument("target", "Default");
 var outputDir = "./artifacts/";
-var providersProjectJson = "./src/TwentyTwenty.MessageBus.Providers/project.json";
-var providersMtProjectJson = "./src/TwentyTwenty.MessageBus.Providers.MassTransit/project.json";
+var configuration   = Argument("configuration", "Release");
 
 Task("Clean")
     .Does(() => {
@@ -15,12 +15,6 @@ Task("Clean")
         CreateDirectory(outputDir);
     });
 
-Task("Restore")
-    .Does(() => {
-        DotNetCoreRestore("src");
-    });
-
-GitVersion versionInfo = null;
 Task("Version")
     .Does(() => {
         GitVersion(new GitVersionSettings{
@@ -28,45 +22,49 @@ Task("Version")
             OutputType = GitVersionOutput.BuildServer
         });
         versionInfo = GitVersion(new GitVersionSettings{ OutputType = GitVersionOutput.Json });
+    });
 
-        // Update project.json
-        var updatedProvidersProjectJson = System.IO.File.ReadAllText(providersProjectJson)
-            .Replace("1.0.0-*", versionInfo.NuGetVersion);
-        var updatedProvidersMtProjectJson = System.IO.File.ReadAllText(providersMtProjectJson)
-            .Replace("1.0.0-*", versionInfo.NuGetVersion);
-
-        System.IO.File.WriteAllText(providersProjectJson, updatedProvidersProjectJson);
-        System.IO.File.WriteAllText(providersMtProjectJson, updatedProvidersMtProjectJson);
+Task("Restore")
+    .IsDependentOn("Version")
+    .Does(() => {        
+        DotNetCoreRestore(new DotNetCoreRestoreSettings
+        {
+            ArgumentCustomization = args => args.Append("-p:VersionPrefix=" + versionInfo.MajorMinorPatch)
+        });
     });
 
 Task("Build")
     .IsDependentOn("Clean")
-    .IsDependentOn("Version")
     .IsDependentOn("Restore")
     .Does(() => {
-        DotNetCoreBuild(providersMtProjectJson);
+        // DotNetCoreBuild(".", new DotNetCoreBuildSettings
+        // {
+        //     Configuration = configuration,
+        //     VersionSuffix = versionInfo.PreReleaseTag,
+        //     ArgumentCustomization = args => args.Append("-p:VersionPrefix=" + versionInfo.MajorMinorPatch),
+        // });
+
+        MSBuild("./TwentyTwenty.MessageBus.Providers.sln", new MSBuildSettings {
+            //Verbosity = Verbosity.Minimal,
+            //ToolVersion = MSBuildToolVersion.VS2015,
+            Configuration = configuration,
+        });
     });
 
 Task("Package")
     .IsDependentOn("Build")
     .Does(() => {
-        //GitLink("./", new GitLinkSettings { ArgumentCustomization = args => args.Append("-include Specify,Specify.Autofac") });
-
-        //GenerateReleaseNotes();
-
         var settings = new DotNetCorePackSettings
         {
             OutputDirectory = outputDir,
-            NoBuild = true
+            NoBuild = true,
+            Configuration = configuration,
+            VersionSuffix = versionInfo.PreReleaseTag,
+            ArgumentCustomization = args => args.Append("-p:VersionPrefix=" + versionInfo.MajorMinorPatch),
         };
 
-        DotNetCorePack(providersMtProjectJson, settings);
-
-        System.IO.File.WriteAllLines(outputDir + "artifacts", new[]{
-            "nuget:TwentyTwenty.BaseLine." + versionInfo.NuGetVersion + ".nupkg",
-            "nugetSymbols:TwentyTwenty.BaseLine." + versionInfo.NuGetVersion + ".symbols.nupkg",
-        //    "releaseNotes:releasenotes.md"
-        });
+        DotNetCorePack("src/TwentyTwenty.MessageBus.Providers/", settings);
+        DotNetCorePack("src/TwentyTwenty.MessageBus.Providers.MassTransit/", settings);
 
         if (AppVeyor.IsRunningOnAppVeyor)
         {
@@ -77,16 +75,5 @@ Task("Package")
 
 Task("Default")
     .IsDependentOn("Package");
-
-private void GenerateReleaseNotes()
-{
-    var settings = new GitReleaseNotesSettings
-    {
-        WorkingDirectory = ".",        
-    };
-
-    GitReleaseNotes("./artifacts/releasenotes.md", settings);
-}
-    
 
 RunTarget(target);

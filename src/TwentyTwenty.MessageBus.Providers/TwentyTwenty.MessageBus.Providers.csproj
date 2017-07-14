@@ -3,7 +3,6 @@
   <PropertyGroup>
     <Description>Message Bus and Provider Abstractions</Description>
     <AssemblyTitle>20|20 MessageBus.Providers</AssemblyTitle>
-    <VersionPrefix>1.3.2</VersionPrefix>
     <Authors>2020IP</Authors>
     <TargetFrameworks>net451;netstandard1.3</TargetFrameworks>
     <AssemblyName>TwentyTwenty.MessageBus.Providers</AssemblyName>
@@ -14,12 +13,6 @@
     <PackageLicenseUrl>https://github.com/2020IP/TwentyTwenty.MessageBus.Providers/master/LICENSE.txt</PackageLicenseUrl>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/2020IP/TwentyTwenty.MessageBus.Providers</RepositoryUrl>
-    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
-    <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
-    <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
-    <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
-    <GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
-    <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
   </PropertyGroup>
 
   <ItemGroup>
