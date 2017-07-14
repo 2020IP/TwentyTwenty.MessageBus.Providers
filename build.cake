@@ -59,7 +59,7 @@ Task("Package")
             OutputDirectory = outputDir,
             NoBuild = true,
             Configuration = configuration,
-            VersionSuffix = versionInfo.PreReleaseTag,
+            VersionSuffix = versionInfo.PreReleaseLabel + versionInfo.PreReleaseNumber,
             ArgumentCustomization = args => args.Append("-p:VersionPrefix=" + versionInfo.MajorMinorPatch),
         };
 
