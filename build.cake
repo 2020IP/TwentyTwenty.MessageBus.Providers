@@ -27,10 +27,10 @@ Task("Version")
 Task("Restore")
     .IsDependentOn("Version")
     .Does(() => {
-        var suffix = versionInfo.PreReleaseLabel + versionInfo.PreReleaseNumber;
+        var props = "-p:VersionPrefix=" + versionInfo.MajorMinorPatch + " -p:VersionSuffix=" + versionInfo.PreReleaseLabel + versionInfo.PreReleaseNumber;
         DotNetCoreRestore(new DotNetCoreRestoreSettings
         {
-            ArgumentCustomization = args => args.Append($"-p:VersionPrefix={versionInfo.MajorMinorPatch} -p:VersionSuffix={suffix}")
+            ArgumentCustomization = args => args.Append(props)
         });
     });
 
