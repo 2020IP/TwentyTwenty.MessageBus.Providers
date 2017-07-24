@@ -19,11 +19,11 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
         private readonly MassTransitMessageBusOptions _options;
         private readonly HandlerManager _manager;
         private readonly IServiceProvider _services;
-        private readonly Action<IRabbitMqBusFactoryConfigurator> _configure;
+        private readonly Action<IRabbitMqBusFactoryConfigurator, IRabbitMqHost> _configure;
         private IBusControl _busControl = null;
 
         public MassTransitMessageBus(MassTransitMessageBusOptions options, HandlerManager manager, IServiceProvider services, 
-            Action<IRabbitMqBusFactoryConfigurator> configure, ILoggerFactory loggerFactory)
+            Action<IRabbitMqBusFactoryConfigurator, IRabbitMqHost> configure, ILoggerFactory loggerFactory)
         {
             if (options == null)
             {

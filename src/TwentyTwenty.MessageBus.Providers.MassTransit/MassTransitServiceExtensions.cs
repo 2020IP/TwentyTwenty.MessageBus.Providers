@@ -11,7 +11,7 @@ namespace Microsoft.Extensions.DependencyInjection
     public static class MassTransitServiceExtensions
     {
         public static void AddMassTransitMessageBus(this IServiceCollection services, MassTransitMessageBusOptions options,
-             Action<IRabbitMqBusFactoryConfigurator> configure = null)
+             Action<IRabbitMqBusFactoryConfigurator, IRabbitMqHost> configure = null)
         {
             if (options == null)
             {
