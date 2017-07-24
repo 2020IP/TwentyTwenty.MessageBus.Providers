@@ -269,7 +269,7 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
                     }
 
                     // Allow for custom configuration.
-                    _configure?.Invoke(sbc);
+                    _configure?.Invoke(sbc, host);
                 });
             }
 
