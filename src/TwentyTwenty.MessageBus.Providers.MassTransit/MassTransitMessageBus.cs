@@ -9,6 +9,7 @@ using System.Threading;
 using System.Reflection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using MassTransit.RabbitMqTransport;
 
 namespace TwentyTwenty.MessageBus.Providers.MassTransit
 {
@@ -18,9 +19,11 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
         private readonly MassTransitMessageBusOptions _options;
         private readonly HandlerManager _manager;
         private readonly IServiceProvider _services;
+        private readonly Action<IRabbitMqBusFactoryConfigurator> _configure;
         private IBusControl _busControl = null;
 
-        public MassTransitMessageBus(MassTransitMessageBusOptions options, HandlerManager manager, IServiceProvider services, ILoggerFactory loggerFactory)
+        public MassTransitMessageBus(MassTransitMessageBusOptions options, HandlerManager manager, IServiceProvider services, 
+            Action<IRabbitMqBusFactoryConfigurator> configure, ILoggerFactory loggerFactory)
         {
             if (options == null)
             {
@@ -43,6 +46,7 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
             _options = options;
             _manager = manager;
             _services = services;
+            _configure = configure;
         }
 
         public virtual async Task<TResult> Send<TResult>(ICommand command) where TResult : class, IResponse
@@ -263,6 +267,9 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
                             }
                         });
                     }
+
+                    // Allow for custom configuration.
+                    _configure?.Invoke(sbc);
                 });
             }
 

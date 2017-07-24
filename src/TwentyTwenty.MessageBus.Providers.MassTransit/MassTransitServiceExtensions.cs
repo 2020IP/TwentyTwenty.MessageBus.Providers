@@ -1,4 +1,5 @@
 ﻿using System;
+using MassTransit.RabbitMqTransport;
 using Microsoft.Extensions.Logging;
 using TwentyTwenty.DomainDriven;
 using TwentyTwenty.DomainDriven.CQRS;
@@ -9,7 +10,8 @@ namespace Microsoft.Extensions.DependencyInjection
 {
     public static class MassTransitServiceExtensions
     {
-        public static void AddMassTransitMessageBus(this IServiceCollection services, MassTransitMessageBusOptions options)
+        public static void AddMassTransitMessageBus(this IServiceCollection services, MassTransitMessageBusOptions options,
+             Action<IRabbitMqBusFactoryConfigurator> configure = null)
         {
             if (options == null)
             {
@@ -19,7 +21,7 @@ namespace Microsoft.Extensions.DependencyInjection
             // Force the adding of the HandlerManager
             StaticHelpers.GetHandlerManager(services);
 
-            services.AddSingleton(s => new MassTransitMessageBus(options, s.GetRequiredService<HandlerManager>(), s, s.GetRequiredService<ILoggerFactory>()));
+            services.AddSingleton(s => new MassTransitMessageBus(options, s.GetRequiredService<HandlerManager>(), s, configure, s.GetRequiredService<ILoggerFactory>()));
             services.AddSingleton<ICommandSender>(s => s.GetService<MassTransitMessageBus>());
             services.AddSingleton<ICommandSenderReceiver>(s => s.GetService<MassTransitMessageBus>());
             services.AddSingleton<IEventPublisher>(s => s.GetService<MassTransitMessageBus>());
