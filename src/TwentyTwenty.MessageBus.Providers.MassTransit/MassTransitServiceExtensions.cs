@@ -11,7 +11,7 @@ namespace Microsoft.Extensions.DependencyInjection
     public static class MassTransitServiceExtensions
     {
         public static void AddMassTransitMessageBus(this IServiceCollection services, MassTransitMessageBusOptions options,
-             Action<IRabbitMqBusFactoryConfigurator, IRabbitMqHost> configure = null)
+             Action<IRabbitMqBusFactoryConfigurator, IRabbitMqHost, IServiceProvider> configure = null)
         {
             if (options == null)
             {
@@ -21,7 +21,7 @@ namespace Microsoft.Extensions.DependencyInjection
             // Force the adding of the HandlerManager
             StaticHelpers.GetHandlerManager(services);
 
-            services.AddSingleton(s => new MassTransitMessageBus(options, s.GetRequiredService<HandlerManager>(), s, configure, s.GetRequiredService<ILoggerFactory>()));
+            services.AddSingleton(s => new MassTransitMessageBus(options, s.GetRequiredService<HandlerManager>(), s, (c, h) => configure(c, h, s), s.GetRequiredService<ILoggerFactory>()));
             services.AddSingleton<ICommandSender>(s => s.GetService<MassTransitMessageBus>());
             services.AddSingleton<ICommandSenderReceiver>(s => s.GetService<MassTransitMessageBus>());
             services.AddSingleton<IEventPublisher>(s => s.GetService<MassTransitMessageBus>());
