@@ -300,5 +300,15 @@ namespace TwentyTwenty.MessageBus.Providers.MassTransit
         {
             return _busControl.StopAsync(token);
         }
+
+        public virtual IPublishEndpoint GetPublishEndpoint()
+        {
+            if (_busControl == null)
+            {
+                throw new InvalidOperationException("MassTransit bus must be started before sending commands.");
+            }
+
+            return _busControl;
+        }
     }
 }
