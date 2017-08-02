@@ -20,9 +20,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="MassTransit" Version="4.0.0.1218-develop" />
-    <PackageReference Include="MassTransit.RabbitMq" Version="4.0.0.1218-develop" />
-    <PackageReference Include="MassTransit.Extensions.DependencyInjection" Version="4.0.0.1218-develop" />
+    <PackageReference Include="MassTransit" Version="4.0.0.1228-develop" />
+    <PackageReference Include="MassTransit.RabbitMq" Version="4.0.0.1228-develop" />
+    <PackageReference Include="MassTransit.Extensions.DependencyInjection" Version="4.0.0.1228-develop" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'net452' ">
